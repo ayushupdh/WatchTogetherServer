@@ -2,13 +2,21 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Schema = mongoose.Schema
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
     {
     name: {
         type: String,
         required:true,
         trim:true
+    },
+    username: {
+        type: String,
+        required:true,
+        trim:true,
+        unique:true,
+        lowercase:true,
     },
     email:{
         type:String,
@@ -31,8 +39,16 @@ const userSchema = new mongoose.Schema(
             if(value.includes('password')){
                 throw new Error('Cant use password as password')
             }
+        },
+    user_status:{
+        type:Boolean
+    },
+    friends:[
+        {
+            type: Schema.Types.ObjectId,
+            ref:'User'
         }
-
+    ]
 
     },
     tokens:[{
@@ -57,35 +73,53 @@ userSchema.pre('save',async function (next){
 })
 
 
+// Check for unique email 
+userSchema.path('email').validate(async(email)=>{
+    const emailCount = await User.countDocuments({email})
+    return !emailCount;
+
+},"Email already exists")
+
+// Check for unique username 
+
+userSchema.path('username').validate(async(username)=>{
+        const usernameCount = await User.countDocuments({username})
+        return !usernameCount;
+    },"Username already exists");
+
+
 //This is for objects. Objects use this method
 userSchema.methods.generateToken = async function(){
     const user = this
     const token =  jwt.sign({_id: user._id.toString()},process.env.JWT_SECRET)
-    user.tokens = user.tokens.concat({token}) 
+    // user.tokens = user.tokens.concat({token}) 
+    // await user.save()
 
-    await user.save()
+    // Update token
+    await User.updateOne({email:user.email}, {tokens: user.tokens.concat({token}) })
     return token
 }
 
 userSchema.methods.toJSON = function(){
     const user =this
     const userObject = user.toObject()
+    delete userObject.tokens;
+    delete userObject.password;
     return userObject
 
 }
 
 
 
-//not object depended. Use on the class
+//not object dependent. Use on the class
 userSchema.statics.findByCredentials = async (email, password)=>{
     const user =  await User.findOne({email})
-
     if(!user){
-        throw new Error('Unable to login')
+        throw new Error('User not found')
 }
     const isMatch = await bcrypt.compare(password, user.password)
     if(!isMatch){
-        throw new Error('Unable to login')
+        throw new Error('Password does not match')
     }
     return user
 }
