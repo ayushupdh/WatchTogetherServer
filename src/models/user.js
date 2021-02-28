@@ -39,26 +39,29 @@ const userSchema = new Schema(
             if(value.includes('password')){
                 throw new Error('Cant use password as password')
             }
-        },
+        }
+    },
     user_status:{
-        type:Boolean
+        type:Boolean,
+        default:false
     },
     friends:[
         {
             type: Schema.Types.ObjectId,
-            ref:'User'
+            ref:'User',
         }
-    ]
-
-    },
+    ],
     tokens:[{
         token:{
             type:String,
             required:true
         }
-    }]},{
+    }]
+},
+    {
     timestamps:true
 })
+
 
 
 //preprocessing before this method  

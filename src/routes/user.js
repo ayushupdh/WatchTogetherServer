@@ -3,6 +3,12 @@ const User = require('../models/user')
 const router = new express.Router()
 const auth  = require('../middleware/auth')
 
+
+// TO do
+// Find out a way to remove pre hooks from user
+// Write tests for user friends
+
+
 // Get all users
 router.get('/users/getAll', async(req,res)=>{
     try{
@@ -35,6 +41,14 @@ router.delete('/users/dumpAll', async(req,res)=>{
 // --------------------------Auth Routes--------------------------------
 // Signup user
 router.post('/users/signup',async (req, res)=>{
+     /*body should look like
+    {
+        "name":"Name",
+        "username":"username",
+        "email":"username@example.com",
+        "password":"password123"
+    } 
+    */
         const user =  new User(req.body)
         try{
             await user.save()
@@ -63,6 +77,17 @@ router.post('/users/signup',async (req, res)=>{
 
 // Login user
 router.post('/users/login', async(req,res)=>{
+        /*body should look like
+    {
+        "username":"username",
+        "password":"password123"
+    }
+    or
+        {
+        "username":"email@example.com",
+        "password":"password123"
+    }
+    */
     try {
         const user = await User.findByCredentials(req.body.username, req.body.password)
 
@@ -105,7 +130,9 @@ router.patch('/users/logoutAll',auth, async(req,res)=>{
 // --------------------------Auth Routes ends--------------------------------
 
 
+// --------------------------User Account Routes--------------------------------
 
+// Gets user account
 router.get('/users/me', auth, async(req, res)=>{
     try{
         res.send(req.user)
@@ -115,6 +142,7 @@ router.get('/users/me', auth, async(req, res)=>{
     }
 })
 
+// Deletes user account
 router.delete('/users/me',auth, async(req,res)=>{
     try {
         await User.findOneAndDelete({email:req.user.email})
@@ -124,6 +152,121 @@ router.delete('/users/me',auth, async(req,res)=>{
       }
 })
 
+// Get user's friends
+router.get('/users/me/friend',auth, async(req,res)=>{
+    try {
+
+        // Populate friends feild
+       await req.user.populate('friends').execPopulate();
+
+        return res.status(200).send({friends:req.user.friends})
+      } catch (e) {
+          console.log(e);
+        res.status(404).send({error:e.message});
+      }
+})
+
+// Add a friend to user account
+router.patch('/users/me/friend',auth, async(req,res)=>{
+    /*  body should look like:
+        {
+            friend: email@example.com
+        }
+        or
+         {
+            friend: username
+        }
+
+   */
+    try {
+        let friend = await User.findOne({username:req.body.friend})
+
+        // check if the friend user exists
+        if(!friend){
+            friend = await User.findOne({email:req.friend})
+            if(!friend){
+                throw Error("No user with that username or email")
+            }
+        }
+        // check if the friend is oneself
+        if(friend._id.equals(req.user._id)){
+            throw new Error("Cannot be friends with themselves")
+        }
+        // check if friend is already in the friends list
+        let exist = req.user.friends.find(friendId=>friendId.equals(friend._id))
+        if(exist){
+            throw new Error("Already friends with this user.")
+        }
+
+        await User.updateOne({_id: req.user._id}, { $addToSet:{friends: friend._id}})
+
+        return res.sendStatus(200)
+      } catch (e) {
+          console.log(e);
+        res.status(404).send({error:e.message});
+      }
+})
+
+// Remove a friend from user account
+router.delete('/users/me/friend',auth, async(req,res)=>{
+    /*  body should look like:
+        {
+            friend: email@example.com
+        }
+        or
+         {
+            friend: username
+        }
+
+   */
+    try {
+        let friend = await User.findOne({username:req.body.friend})
+
+        // check if the friend user exists
+        if(!friend){
+            friend = await User.findOne({email:req.friend})
+            if(!friend){
+                throw Error("No user with that username or email")
+            }
+        }
+        // check if the friend is oneself
+        if(friend._id.equals(req.user._id)){
+            throw new Error("Cannot be the users own id")
+        }
+        // check if friend is already in the friends list
+        let exist = req.user.friends.find(friendId=>friendId.equals(friend._id))
+        if(!exist){
+            throw new Error("No such friend present.")
+        }
+
+        await User.updateOne({_id: req.user._id}, { $pull:{friends: friend._id}})
+
+        return res.sendStatus(200)
+      } catch (e) {
+          console.log(e);
+        res.status(404).send({error:e.message});
+      }
+})
+
+// Chnage user state
+router.patch('/users/me/status',auth, async(req,res)=>{
+    /*  body should look like:
+        {  status: boolean  }
+   */
+    try {
+
+            await User.updateOne({_id:req.user._id}, {user_status:req.body.status})
+
+            return res.status(200).send({status: req.body.status});
+
+
+      } catch (error) {
+          console.log(error);
+        res.status(404).send(error);
+      }
+})
+
+// --------------------------User Account Ends--------------------------------
 
 // const checkforUniqueEmailorUsername=async(email,username)=>{
 //     const emailUser = await User.findOne({email})
