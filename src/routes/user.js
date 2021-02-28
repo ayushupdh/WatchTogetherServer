@@ -64,7 +64,7 @@ router.post('/users/signup',async (req, res)=>{
 // Login user
 router.post('/users/login', async(req,res)=>{
     try {
-        const user = await User.findByCredentials(req.body.email, req.body.password)
+        const user = await User.findByCredentials(req.body.username, req.body.password)
 
         const token = await user.generateToken()
         
@@ -79,10 +79,11 @@ router.post('/users/login', async(req,res)=>{
 // Logout User
 router.patch('/users/logout',auth, async(req,res)=>{
     try {
-        req.user.tokens = req.user.tokens.filter((token) => {
-          return token.token !== req.token;
-        });
-        await req.user.save();
+        // req.user.tokens = req.user.tokens.filter((token) => {
+        //   return token.token !== req.token;
+        // });
+        // await req.user.save();
+        await User.updateOne({email:req.user.email}, {tokens: req.user.tokens.filter((token) =>  token.token !== req.token)} )
         res.sendStatus(200);
       } catch (error) {
         console.log(error);
@@ -93,8 +94,9 @@ router.patch('/users/logout',auth, async(req,res)=>{
 // Logout User from everywhere
 router.patch('/users/logoutAll',auth, async(req,res)=>{
     try {
-        req.user.tokens =[]
-        await req.user.save();
+        // req.user.tokens =[]
+        // await req.user.save();
+        await User.updateOne({email:req.user.email}, {tokens: [] })
         res.sendStatus(200);
       } catch (error) {
         console.log(error);

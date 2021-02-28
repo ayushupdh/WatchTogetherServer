@@ -112,11 +112,15 @@ userSchema.methods.toJSON = function(){
 
 
 //not object dependent. Use on the class
-userSchema.statics.findByCredentials = async (email, password)=>{
-    const user =  await User.findOne({email})
+userSchema.statics.findByCredentials = async (usernameOrEmail, password)=>{
+    let user =  await User.findOne({email: usernameOrEmail})
     if(!user){
-        throw new Error('User not found')
-}
+        user = await User.findOne({username: usernameOrEmail})
+        if(!user){
+            throw new Error('User not found')
+        }
+    }
+
     const isMatch = await bcrypt.compare(password, user.password)
     if(!isMatch){
         throw new Error('Password does not match')
