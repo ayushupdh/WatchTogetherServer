@@ -1,5 +1,3 @@
-const { Mongoose } = require("mongoose");
-
 const mongoose = require("mongoose")
 
 mongoose.connect(process.env.MONGOURL,{

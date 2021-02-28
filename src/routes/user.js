@@ -3,6 +3,7 @@ const User = require('../models/user')
 const router = new express.Router()
 const auth  = require('../middleware/auth')
 
+
 router.get('/users/getAll', async(req,res)=>{
     try{
         const users = await User.find();
@@ -46,11 +47,29 @@ router.post('/users/login', async(req,res)=>{
         res.status(400).send()
     }
 }) 
+router.post('/users/logout',auth, async(req,res)=>{
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+          return token.token !== req.token;
+        });
+        await req.user.save();
+        res.sendStatus(200);
+      } catch (error) {
+        console.log(error);
+        res.sendStatus(404);
+      }
+}) 
 
 
 router.get('/users/me', auth, async(req, res)=>{
-    res.send(req.user)
+    try{
+        res.send(req.user)
+    }catch(e){
+        res.sendStatus(404);
+        console.log(e);
+    }
 })
+
 
 
 module.exports = router
