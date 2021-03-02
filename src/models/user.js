@@ -45,6 +45,10 @@ const userSchema = new Schema(
         type:Boolean,
         default:false
     },
+    avatar:{
+        type:Buffer,
+
+    },
     friends:[
         {
             type: Schema.Types.ObjectId,

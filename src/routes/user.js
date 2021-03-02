@@ -6,7 +6,6 @@ const auth  = require('../middleware/auth')
 
 // TO do
 // Find out a way to remove pre hooks from user
-// Write tests for user friends
 
 
 // Get all users
@@ -157,8 +156,8 @@ router.get('/users/me/friend',auth, async(req,res)=>{
     try {
 
         // Populate friends feild
-       await req.user.populate('friends').execPopulate();
-
+       await req.user.populate('friends', 'name email username').execPopulate();
+     
         return res.status(200).send({friends:req.user.friends})
       } catch (e) {
           console.log(e);
@@ -202,7 +201,6 @@ router.patch('/users/me/friend',auth, async(req,res)=>{
 
         return res.sendStatus(200)
       } catch (e) {
-          console.log(e);
         res.status(404).send({error:e.message});
       }
 })
@@ -248,7 +246,7 @@ router.delete('/users/me/friend',auth, async(req,res)=>{
       }
 })
 
-// Chnage user state
+// Chnage user status
 router.patch('/users/me/status',auth, async(req,res)=>{
     /*  body should look like:
         {  status: boolean  }
@@ -256,10 +254,7 @@ router.patch('/users/me/status',auth, async(req,res)=>{
     try {
 
             await User.updateOne({_id:req.user._id}, {user_status:req.body.status})
-
-            return res.status(200).send({status: req.body.status});
-
-
+            return res.status(200).send();
       } catch (error) {
           console.log(error);
         res.status(404).send(error);

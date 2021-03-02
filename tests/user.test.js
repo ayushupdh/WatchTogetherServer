@@ -16,10 +16,26 @@ const userOne = {
         token:jwt.sign({_id:userOneId}, process.env.JWT_SECRET)
     }]
 }
+const userTwoId = new mongoose.Types.ObjectId()
+
+const userTwo = {
+    _id:userTwoId,
+    name:'Potter',
+    email:'potatoter@hogwarts.com',
+    username:'potatoter',
+    password:'ohno901!',
+    friends:[
+            userOneId
+    ],
+    tokens:[{
+        token:jwt.sign({_id:userTwoId}, process.env.JWT_SECRET)
+    }]
+}
 
 beforeEach(async()=>{
    await User.deleteMany()
    await new User(userOne).save()
+   await new User(userTwo).save()
 })
 
 test("Signup a user", async()=>{
@@ -88,6 +104,7 @@ test('Get users profile back', async()=>{
     })
 })
 
+
 test("Don't get profile back for unauthorized user", async()=>{
     await request(app)
     .get('/users/me')
@@ -95,17 +112,115 @@ test("Don't get profile back for unauthorized user", async()=>{
     .expect(401)
 })
 
-test('Should not delete account for unauthorised user', async()=>{
+
+test('Add Users Friend', async()=>{
+    await request(app)
+    .patch('/users/me/friend')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+        friend:userTwo.username
+    })
+    .expect(200)
+})
+
+test('Get Users Friend', async()=>{
+
+   const response = await request(app)
+    .get('/users/me/friend')
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .expect(200)
+
+    expect(response.body).toMatchObject(
+      {
+        friends: [
+            {
+                _id:userOneId.toString(),
+                name:userOne.name,
+                email:userOne.email,
+                username:userOne.username
+            }
+        ]
+      }
+    )
+
+})
+
+test("Shouldn't add oneself for Friend", async()=>{
+    await request(app)
+    .patch('/users/me/friend')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+        friend:userOne.username
+    })
+    .expect(404)
+ })
+
+ test("Shouldn't add same user as Friend twice", async()=>{
+    await request(app)
+    .patch('/users/me/friend')
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+        friend:userOne.username
+    })
+    .expect(404)
+ })
+ test("Change user status", async()=>{
+    await request(app)
+    .patch('/users/me/status')
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+         status: false
+    })
+    .expect(200)
+ })
+
+
+ test("Delete friend", async()=>{
+    await request(app)
+    .delete('/users/me/friend')
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+        friend:userOne.username
+    })
+    .expect(200)
+ })
+
+ test("Should not delete friend without authorization", async()=>{
+    await request(app)
+    .delete('/users/me/friend')
+    .send({
+        friend:userOne.username
+    })
+    .expect(401)
+ })
+ test("Should not delete friend that doesn't exist", async()=>{
+    await request(app)
+    .delete('/users/me/friend')
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+        friend:'randuserthatdoesntexists'
+    })
+    .expect(404)
+ })
+
+
+
+
+//----------------------------------- Delete user tests-------------------------------------------
+
+test("Don't delete account for unauthorised user", async()=>{
     await request(app)
     .delete('/users/me')
     .send()
     .expect(401)
 })
 
-test('Should delete account for the user', async()=>{
+test('Delete account for the user', async()=>{
     await request(app)
     .delete('/users/me')
     .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
     .send()
     .expect(200)
 })
+
+
