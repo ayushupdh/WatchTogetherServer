@@ -1,36 +1,37 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
 const groupSchema = new Schema(
-    {
-    name:{
-        type:String
+  {
+    name: {
+      type: String,
     },
-    users: [{
+    users: [
+      {
         type: Schema.Types.ObjectId,
-        ref:'User',
-    }],
+        ref: "User",
+      },
+    ],
     // liked_movies: [Movies],
     // disliked_movies: [Movies],
-    sessions: [{
-        type : Date, default: Date.now
-    }],
+    sessions: [
+      {
+        type: Date,
+        default: Date.now,
+      },
+    ],
     current_session_time: Date,
     created_by: {
-        type: Schema.Types.ObjectId,
-        ref:'User',
-    }
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
-    {
-    timestamps:true
-})
+  },
+  {
+    timestamps: true,
+  }
+);
 
+const Group = mongoose.model("Group", groupSchema);
 
-
-
-
-const Group = mongoose.model('Group',groupSchema)
-
-module.exports =Group
+module.exports = Group;

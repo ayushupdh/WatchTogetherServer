@@ -1,12 +1,15 @@
-const express = require('express')
-require('./db/mongoose')
-const cors = require('cors')
-const User = require('./models/user')
-const userRouter = require('./routes/user')
-const app =express()
-app.use(cors())
+const express = require("express");
+require("./db/mongoose");
+const cors = require("cors");
+const User = require("./models/user");
+const userRouter = require("./routes/user");
+const groupRouter = require("./routes/group");
 
-app.use(express.json())
-app.use(userRouter)
+const app = express();
+app.use(cors());
 
-module.exports= app
+app.use(express.json());
+app.use(userRouter);
+app.use(groupRouter);
+
+module.exports = app;

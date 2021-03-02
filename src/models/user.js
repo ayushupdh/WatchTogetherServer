@@ -1,140 +1,137 @@
-const mongoose = require('mongoose')
-const validator = require('validator')
-const bcrypt  = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const Schema = mongoose.Schema
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
-    {
+  {
     name: {
-        type: String,
-        required:true,
-        trim:true
+      type: String,
+      required: true,
+      trim: true,
     },
     username: {
-        type: String,
-        required:true,
-        trim:true,
-        unique:true,
-        lowercase:true,
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      lowercase: true,
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true,
-        lowercase:true,
-        validate(value){
-            if(!validator.isEmail(value)){
-                throw new Error('Email is invalid')
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email is invalid");
         }
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 6,
+      validate(value) {
+        if (value.includes("password")) {
+          throw new Error("Cant use password as password");
         }
+      },
     },
-    password:{
-        type:String,
-        required:true,
-        trim:true,
-        minlength:6,
-        validate(value){
-            if(value.includes('password')){
-                throw new Error('Cant use password as password')
-            }
-        }
+    user_status: {
+      type: Boolean,
+      default: false,
     },
-    user_status:{
-        type:Boolean,
-        default:false
+    avatar: {
+      type: Buffer,
     },
-    avatar:{
-        type:Buffer,
-
-    },
-    friends:[
-        {
-            type: Schema.Types.ObjectId,
-            ref:'User',
-        }
+    friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
     ],
-    tokens:[{
-        token:{
-            type:String,
-            required:true
-        }
-    }]
-},
-    {
-    timestamps:true
-})
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
+//preprocessing before this method
+userSchema.pre("save", async function (next) {
+  const user = this;
 
+  if (user.isModified("password")) {
+    user.password = await bcrypt.hash(user.password, 8);
+  }
 
-//preprocessing before this method  
-userSchema.pre('save',async function (next){
-    const user = this
+  next();
+});
 
-    if(user.isModified('password')){
-        user.password = await bcrypt.hash(user.password,8)
-    }
+// Check for unique email
+userSchema.path("email").validate(async (email) => {
+  const emailCount = await User.countDocuments({ email });
+  return !emailCount;
+}, "Email already exists");
 
-    next()
-})
+// Check for unique username
 
-
-// Check for unique email 
-userSchema.path('email').validate(async(email)=>{
-    const emailCount = await User.countDocuments({email})
-    return !emailCount;
-
-},"Email already exists")
-
-// Check for unique username 
-
-userSchema.path('username').validate(async(username)=>{
-        const usernameCount = await User.countDocuments({username})
-        return !usernameCount;
-    },"Username already exists");
-
+userSchema.path("username").validate(async (username) => {
+  const usernameCount = await User.countDocuments({ username });
+  return !usernameCount;
+}, "Username already exists");
 
 //This is for objects. Objects use this method
-userSchema.methods.generateToken = async function(){
-    const user = this
-    const token =  jwt.sign({_id: user._id.toString()},process.env.JWT_SECRET)
-    // user.tokens = user.tokens.concat({token}) 
-    // await user.save()
+userSchema.methods.generateToken = async function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+  // user.tokens = user.tokens.concat({token})
+  // await user.save()
 
-    // Update token
-    await User.updateOne({email:user.email}, {tokens: user.tokens.concat({token}) })
-    return token
-}
+  // Update token
+  await User.updateOne(
+    { email: user.email },
+    { tokens: user.tokens.concat({ token }) }
+  );
+  return token;
+};
 
-userSchema.methods.toJSON = function(){
-    const user =this
-    const userObject = user.toObject()
-    delete userObject.tokens;
-    delete userObject.password;
-    return userObject
-
-}
-
-
+userSchema.methods.toJSON = function () {
+  const user = this;
+  const userObject = user.toObject();
+  delete userObject.tokens;
+  delete userObject.password;
+  return userObject;
+};
 
 //not object dependent. Use on the class
-userSchema.statics.findByCredentials = async (usernameOrEmail, password)=>{
-    let user =  await User.findOne({email: usernameOrEmail})
-    if(!user){
-        user = await User.findOne({username: usernameOrEmail})
-        if(!user){
-            throw new Error('User not found')
-        }
+userSchema.statics.findByCredentials = async (usernameOrEmail, password) => {
+  let user = await User.findOne({ email: usernameOrEmail });
+  if (!user) {
+    user = await User.findOne({ username: usernameOrEmail });
+    if (!user) {
+      throw new Error("User not found");
     }
+  }
 
-    const isMatch = await bcrypt.compare(password, user.password)
-    if(!isMatch){
-        throw new Error('Password does not match')
-    }
-    return user
-}
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new Error("Password does not match");
+  }
+  return user;
+};
 
-const User = mongoose.model('User',userSchema)
+const User = mongoose.model("User", userSchema);
 
-module.exports =User
+module.exports = User;

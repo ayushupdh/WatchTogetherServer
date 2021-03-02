@@ -60,6 +60,8 @@ router.delete("/users/me/friend", auth, removeUsersFriends);
 // Change user status
 router.patch("/users/me/status", auth, changeUsersStatus);
 
+// Get user groups
+
 // --------------------------User Account Ends--------------------------------
 
 // const checkforUniqueEmailorUsername=async(email,username)=>{
