@@ -6,6 +6,7 @@ const moviesSchema = new Schema({
   name: {
     type: String,
     required: true,
+    trim: true,
   },
   poster_image: {
     type: String,

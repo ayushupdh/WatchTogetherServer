@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Group = require("../models/group");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -128,7 +129,7 @@ const deleteUsersAccount = async (req, res) => {
 const getUsersFriends = async (req, res) => {
   try {
     // Populate friends feild
-    await req.user.populate("friends", "name email username").execPopulate();
+    await req.user.populate("friends", "name username").execPopulate();
 
     return res.status(200).send({ friends: req.user.friends });
   } catch (e) {
@@ -240,6 +241,15 @@ const changeUsersStatus = async (req, res) => {
   }
 };
 
+const joinAGroup = async (req, res) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { groups: [req.group_id] });
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.status(404).send(error.message);
+  }
+};
 module.exports = {
   getAllUsers,
   deleteAllUsers,

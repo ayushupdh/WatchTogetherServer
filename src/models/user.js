@@ -45,6 +45,12 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    groups: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Group",
+      },
+    ],
     avatar: {
       type: Buffer,
     },

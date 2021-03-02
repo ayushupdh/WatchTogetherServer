@@ -145,7 +145,6 @@ test("Get Users Friend", async () => {
       {
         _id: userOneId.toString(),
         name: userOne.name,
-        email: userOne.email,
         username: userOne.username,
       },
     ],
