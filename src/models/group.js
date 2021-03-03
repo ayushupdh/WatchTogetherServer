@@ -9,12 +9,18 @@ const groupSchema = new Schema(
       trim: true,
       required: true,
     },
-    // users: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: "User",
-    //   },
-    // ],
+    active_users: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    users: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     // liked_movies: [Movies],
     // disliked_movies: [Movies],
     sessions: [
@@ -33,19 +39,11 @@ const groupSchema = new Schema(
       required: true,
     },
   },
-  { toJson: { virtuals: true }, toObject: { virtuals: true } },
+  { toJson: { virtuals: true }, toObject: { virtuals: true }, id: false },
   {
     timestamps: true,
   }
 );
-
-groupSchema.virtual("users", {
-  ref: "User",
-  //   Field on this document
-  localField: "_id",
-  //   Field on the other document
-  foreignField: "groups",
-});
 
 groupSchema.set("toObject", { virtuals: true });
 groupSchema.set("toJSON", { virtuals: true });

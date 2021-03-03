@@ -45,12 +45,6 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    groups: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Group",
-      },
-    ],
     avatar: {
       type: Buffer,
     },
@@ -69,10 +63,20 @@ const userSchema = new Schema(
       },
     ],
   },
+  { toJson: { virtuals: true }, toObject: { virtuals: true }, id: false },
+
   {
     timestamps: true,
   }
 );
+
+userSchema.virtual("groups", {
+  ref: "Group",
+  //   Field on this document
+  localField: "_id",
+  //   Field on the other document
+  foreignField: "users",
+});
 
 //preprocessing before this method
 userSchema.pre("save", async function (next) {

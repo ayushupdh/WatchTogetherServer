@@ -15,6 +15,7 @@ const {
   addUsersFriends,
   removeUsersFriends,
   changeUsersStatus,
+  getUsersGroup,
 } = require("../controllers/userControllers.js");
 
 // TO do
@@ -61,6 +62,7 @@ router.delete("/users/me/friend", auth, removeUsersFriends);
 router.patch("/users/me/status", auth, changeUsersStatus);
 
 // Get user groups
+router.get("/users/me/groups", auth, getUsersGroup);
 
 // --------------------------User Account Ends--------------------------------
 

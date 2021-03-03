@@ -6,10 +6,9 @@ const {
   createGroup,
   dumpAllGroups,
   getGroupInfo,
+  addUsertogroup,
+  getGroupUsers,
 } = require("../controllers/groupController");
-
-// TO DO:
-// Fix groups populating when user is populated issue.
 
 // Get all groups
 router.get("/groups/getAll", auth, getAllGroups);
@@ -17,16 +16,24 @@ router.get("/groups/getAll", auth, getAllGroups);
 // Delete all groups
 router.delete("/groups/dumpAll", auth, dumpAllGroups);
 
-// Get group users
-
 // Create a group
 router.post("/groups/create", auth, createGroup);
 
-// Get groups info
-router.get("/groups/:id", auth, getGroupInfo);
+// Get group users
+router.get("/groups/users", auth, getGroupUsers);
 
 // Add users to group
+router.post("/groups/addUser", auth, addUsertogroup);
 
 // Start a new session in group
+
+// Add to active users
+router.post("/groups/activeUsers", auth, () => {});
+
+// Get active users
+router.get("/groups/activeUsers", auth, () => {});
+
+// Get groups info
+router.get("/groups/:id", auth, getGroupInfo);
 
 module.exports = router;

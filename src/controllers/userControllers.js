@@ -3,7 +3,7 @@ const Group = require("../models/group");
 
 const getAllUsers = async (req, res) => {
   try {
-    if (req.body.key !== process.env.key) {
+    if (process.env.NODE_ENV !== "development") {
       return res.sendStatus(403);
     }
     const users = await User.find();
@@ -15,8 +15,8 @@ const getAllUsers = async (req, res) => {
 };
 const deleteAllUsers = async (req, res) => {
   try {
-    if (req.body.key !== process.env.key) {
-      return res.sendStatus(404);
+    if (process.env.NODE_ENV !== "development") {
+      return res.sendStatus(403);
     }
     await User.deleteMany();
     res.status(201).send({ message: "Users Deleted" });
@@ -100,6 +100,7 @@ const logoutUser = async (req, res) => {
 };
 
 const logoutUserEveryWhere = async (req, res) => {
+  // !Not tested
   try {
     // req.user.tokens =[]
     // await req.user.save();
@@ -112,8 +113,14 @@ const logoutUserEveryWhere = async (req, res) => {
 };
 const getUsersAccount = async (req, res) => {
   try {
+    await req.user
+      .populate({
+        path: "groups",
+      })
+      .execPopulate();
     res.send(req.user);
   } catch (e) {
+    // !Not tested
     res.sendStatus(404);
     console.log(e);
   }
@@ -123,6 +130,7 @@ const deleteUsersAccount = async (req, res) => {
     await User.findOneAndDelete({ email: req.user.email });
     res.sendStatus(200);
   } catch (error) {
+    // !Not tested
     res.sendStatus(404);
   }
 };
@@ -133,6 +141,7 @@ const getUsersFriends = async (req, res) => {
 
     return res.status(200).send({ friends: req.user.friends });
   } catch (e) {
+    // !Not tested
     console.log(e);
     res.status(404).send({ error: e.message });
   }
@@ -152,6 +161,7 @@ const addUsersFriends = async (req, res) => {
     let friend = await User.findOne({ username: req.body.friend });
 
     // check if the friend user exists
+    // !Not tested
     if (!friend) {
       friend = await User.findOne({ email: req.friend });
       if (!friend) {
@@ -209,6 +219,8 @@ const removeUsersFriends = async (req, res) => {
     let exist = req.user.friends.find((friendId) =>
       friendId.equals(friend._id)
     );
+
+    // !Not tested
     if (!exist) {
       throw new Error("No such friend present.");
     }
@@ -230,21 +242,28 @@ const changeUsersStatus = async (req, res) => {
         {  status: boolean  }
    */
   try {
+    // !Not tested
+    if (!req.body.status && typeof req.body.status !== Boolean) {
+      res.status(403).send({ error: "Invalid type" });
+    }
     await User.updateOne(
       { _id: req.user._id },
       { user_status: req.body.status }
     );
     return res.status(200).send();
   } catch (error) {
+    // !Not tested
     console.log(error);
     res.status(404).send(error);
   }
 };
 
-const joinAGroup = async (req, res) => {
+// No tested
+const getUsersGroup = async (req, res) => {
   try {
-    await User.updateOne({ _id: req.user._id }, { groups: [req.group_id] });
-    return res.sendStatus(200);
+    await req.user.populate("groups").execPopulate();
+
+    return res.status(200).send({ groups: req.user.groups });
   } catch (error) {
     console.log(error);
     res.status(404).send(error.message);
@@ -263,4 +282,5 @@ module.exports = {
   addUsersFriends,
   removeUsersFriends,
   changeUsersStatus,
+  getUsersGroup,
 };

@@ -175,7 +175,7 @@ test("Change user status", async () => {
     .patch("/users/me/status")
     .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
     .send({
-      status: false,
+      status: true,
     })
     .expect(200);
 });

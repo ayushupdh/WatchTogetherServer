@@ -1,9 +1,9 @@
 const Group = require("../models/group");
-const User = require("../models/user");
 
 const getAllGroups = async (req, res) => {
+  console.log(process.env.NODE_ENV);
   try {
-    if (req.body.key !== process.env.key) {
+    if (process.env.NODE_ENV !== "development") {
       return res.sendStatus(403);
     }
 
@@ -19,7 +19,6 @@ const getGroupInfo = async (req, res) => {
   try {
     const groups = await Group.findOne({ _id: req.params.id });
     await groups.populate("users", "name username").execPopulate();
-    console.log(groups);
     res.status(200).send(groups);
   } catch (e) {
     console.log(e);
@@ -29,8 +28,8 @@ const getGroupInfo = async (req, res) => {
 
 const dumpAllGroups = async (req, res) => {
   try {
-    if (req.body.key !== process.env.key) {
-      return res.sendStatus(404);
+    if (process.env.NODE_ENV !== "development") {
+      return res.sendStatus(403);
     }
     await Group.deleteMany();
     res.status(200).send({ message: "Groups Deleted" });
@@ -50,18 +49,70 @@ const createGroup = async (req, res) => {
   try {
     req.body.sessions = [Date.now()];
     req.body.created_by = req.user._id;
+    req.body.users = [req.user._id];
     const newGroup = new Group(req.body);
-    await newGroup.save();
+    newGroup.save();
 
-    await User.updateOne({ _id: req.user._id }, { groups: [newGroup._id] });
-
-    return res.sendStatus(200);
+    return res.status(200).send(newGroup);
   } catch (e) {
-    console.log(e);
     return res.send(403);
   }
 };
 
-const addUserToGroup = "";
+const addUsertogroup = async (req, res) => {
+  /*    body:{
+            userId: Schema.Types.ObjectId,
+            groupID: Schema.Types.ObjectId
+          }
+  }*/
 
-module.exports = { getAllGroups, createGroup, dumpAllGroups, getGroupInfo };
+  // check if the user is part of that group
+  try {
+    const { users } = await Group.findById(req.body.groupId, "users -_id");
+
+    if (users.includes(req.user._id)) {
+      await Group.findByIdAndUpdate(req.body.groupId, {
+        users: users.concat(req.body.userId),
+      });
+
+      return res.sendStatus(200);
+    }
+    return res.status(401);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).send({ error: "The group does not exists" });
+  }
+  // add the user to a group
+};
+
+const getGroupUsers = async (req, res) => {
+  /*    body:{
+            groupID: Schema.Types.ObjectId
+          }
+  }*/
+
+  // check if the user is part of that group
+  try {
+    console.log(req.body.groupId);
+    const { users } = await (
+      await Group.findById(req.body.groupId, "users -_id").populate(
+        "users",
+        "name _id username email"
+      )
+    ).execPopulate();
+
+    return res.status(200).send({ users });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).send({ error: "The group does not exists" });
+  }
+  // add the user to a group
+};
+module.exports = {
+  getAllGroups,
+  createGroup,
+  dumpAllGroups,
+  getGroupInfo,
+  addUsertogroup,
+  getGroupUsers,
+};
