@@ -15,6 +15,9 @@ const userOne = {
     {
       token: jwt.sign({ _id: userOneId }, process.env.JWT_SECRET),
     },
+    {
+      token: jwt.sign({ _id: userOneId }, process.env.JWT_SECRET),
+    },
   ],
 };
 const userTwoId = new mongoose.Types.ObjectId();
@@ -41,6 +44,7 @@ beforeEach(async () => {
 
 afterAll(() => mongoose.disconnect());
 
+// -------------------------_Auth tests_--------------------------------------------------
 test("Signup a user", async () => {
   const response = await request(app)
     .post("/users/signup")
@@ -106,6 +110,22 @@ test("Login fails with invalid username or email", async () => {
     .expect(400);
 });
 
+test("Logout a user", async () => {
+  await request(app)
+    .patch("/users/logout")
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200);
+});
+
+test("Logout user eveyrwhere", async () => {
+  await request(app)
+    .patch("/users/logoutAll")
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200);
+});
+
 test("Get users profile back", async () => {
   const response = await request(app)
     .get("/users/me")
@@ -134,6 +154,46 @@ test("Add Users Friend", async () => {
     .expect(200);
 });
 
+test("Shouldn't Add Friends that do not exist", async () => {
+  const errorResponse = { error: "No user with that username or email" };
+  await request(app)
+    .patch("/users/me/friend")
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      friend: "randomusername",
+    })
+    .expect(404, errorResponse);
+});
+
+test("Shouldn't Add ownself as Friends ", async () => {
+  const errorResponse = { error: "Cannot be friends with themselves" };
+  await request(app)
+    .patch("/users/me/friend")
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      friend: userOne.username,
+    })
+    .expect(404, errorResponse);
+
+  await request(app)
+    .patch("/users/me/friend")
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      friend: userOne.email,
+    })
+    .expect(404, errorResponse);
+});
+test("Shouldn't Add friends that already exist ", async () => {
+  const errorResponse = { error: "Already friends with this user." };
+  await request(app)
+    .patch("/users/me/friend")
+    .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+      friend: userOne.username,
+    })
+    .expect(404, errorResponse);
+});
+
 test("Get Users Friend", async () => {
   const response = await request(app)
     .get("/users/me/friend")
@@ -151,25 +211,6 @@ test("Get Users Friend", async () => {
   });
 });
 
-test("Shouldn't add oneself for Friend", async () => {
-  await request(app)
-    .patch("/users/me/friend")
-    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
-    .send({
-      friend: userOne.username,
-    })
-    .expect(404);
-});
-
-test("Shouldn't add same user as Friend twice", async () => {
-  await request(app)
-    .patch("/users/me/friend")
-    .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
-    .send({
-      friend: userOne.username,
-    })
-    .expect(404);
-});
 test("Change user status", async () => {
   await request(app)
     .patch("/users/me/status")
@@ -178,6 +219,24 @@ test("Change user status", async () => {
       status: true,
     })
     .expect(200);
+});
+
+test("User status should be boolean", async () => {
+  await request(app)
+    .patch("/users/me/status")
+    .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+      status: "12",
+    })
+    .expect(403);
+
+  await request(app)
+    .patch("/users/me/status")
+    .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+      status: "123",
+    })
+    .expect(403);
 });
 
 test("Delete friend", async () => {
@@ -198,14 +257,16 @@ test("Should not delete friend without authorization", async () => {
     })
     .expect(401);
 });
+
 test("Should not delete friend that doesn't exist", async () => {
+  const errorMessage = { error: "No such friend present." };
   await request(app)
     .delete("/users/me/friend")
-    .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
+    .set("Authorization", `Bearer ${userOne.tokens[0].token}`)
     .send({
-      friend: "randuserthatdoesntexists",
+      friend: userTwo.username,
     })
-    .expect(404);
+    .expect(404, errorMessage);
 });
 
 //----------------------------------- Delete user tests-------------------------------------------

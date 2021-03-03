@@ -89,22 +89,19 @@ const logoutUser = async (req, res) => {
     // });
     // await req.user.save();
     await User.updateOne(
-      { email: req.user.email },
+      { _id: req.user._id },
       { tokens: req.user.tokens.filter((token) => token.token !== req.token) }
     );
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } catch (error) {
     console.log(error);
-    res.sendStatus(404);
+    return res.sendStatus(404);
   }
 };
 
 const logoutUserEveryWhere = async (req, res) => {
-  // !Not tested
   try {
-    // req.user.tokens =[]
-    // await req.user.save();
-    await User.updateOne({ email: req.user.email }, { tokens: [] });
+    await User.updateOne({ _id: req.user._id }, { tokens: [] });
     res.sendStatus(200);
   } catch (error) {
     console.log(error);
@@ -118,22 +115,21 @@ const getUsersAccount = async (req, res) => {
         path: "groups",
       })
       .execPopulate();
-    res.send(req.user);
+    res.status(200).send(req.user);
   } catch (e) {
-    // !Not tested
-    res.sendStatus(404);
     console.log(e);
   }
 };
+
 const deleteUsersAccount = async (req, res) => {
   try {
-    await User.findOneAndDelete({ email: req.user.email });
+    await User.findByIdAndDelete(req.user._id);
     res.sendStatus(200);
   } catch (error) {
-    // !Not tested
     res.sendStatus(404);
   }
 };
+
 const getUsersFriends = async (req, res) => {
   try {
     // Populate friends feild
@@ -141,9 +137,7 @@ const getUsersFriends = async (req, res) => {
 
     return res.status(200).send({ friends: req.user.friends });
   } catch (e) {
-    // !Not tested
     console.log(e);
-    res.status(404).send({ error: e.message });
   }
 };
 const addUsersFriends = async (req, res) => {
@@ -158,19 +152,22 @@ const addUsersFriends = async (req, res) => {
 
    */
   try {
+    // check if the friend is oneself
+    if (
+      req.body.friend === req.user.username ||
+      req.body.friend === req.user.email
+    ) {
+      throw new Error("Cannot be friends with themselves");
+    }
+
     let friend = await User.findOne({ username: req.body.friend });
 
     // check if the friend user exists
-    // !Not tested
     if (!friend) {
-      friend = await User.findOne({ email: req.friend });
+      friend = await User.findOne({ email: req.body.friend });
       if (!friend) {
         throw Error("No user with that username or email");
       }
-    }
-    // check if the friend is oneself
-    if (friend._id.equals(req.user._id)) {
-      throw new Error("Cannot be friends with themselves");
     }
     // check if friend is already in the friends list
     let exist = req.user.friends.find((friendId) =>
@@ -232,7 +229,6 @@ const removeUsersFriends = async (req, res) => {
 
     return res.sendStatus(200);
   } catch (e) {
-    console.log(e);
     res.status(404).send({ error: e.message });
   }
 };
@@ -242,23 +238,22 @@ const changeUsersStatus = async (req, res) => {
         {  status: boolean  }
    */
   try {
-    // !Not tested
-    if (!req.body.status && typeof req.body.status !== Boolean) {
-      res.status(403).send({ error: "Invalid type" });
+    if (!req.body.status || typeof req.body.status !== "boolean") {
+      return res.status(403).send({ error: "Invalid type" });
     }
+
     await User.updateOne(
       { _id: req.user._id },
       { user_status: req.body.status }
     );
-    return res.status(200).send();
+
+    return res.sendStatus(200);
   } catch (error) {
-    // !Not tested
-    console.log(error);
-    res.status(404).send(error);
+    return res.sendStatus(404);
   }
 };
 
-// No tested
+// !Not tested ---GROUP
 const getUsersGroup = async (req, res) => {
   try {
     await req.user.populate("groups").execPopulate();
