@@ -7,7 +7,7 @@ const getAllUsers = async (req, res) => {
       return res.sendStatus(403);
     }
     const users = await User.find();
-    res.status(201).send(users);
+    res.status(200).send(users);
   } catch (e) {
     console.log(e);
     res.status(400);
@@ -19,7 +19,7 @@ const deleteAllUsers = async (req, res) => {
       return res.sendStatus(403);
     }
     await User.deleteMany();
-    res.status(201).send({ message: "Users Deleted" });
+    res.status(205).send({ message: "Users Deleted" });
   } catch (e) {
     console.log({ errors: e });
   }
