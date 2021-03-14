@@ -1,7 +1,6 @@
 const Group = require("../models/group");
 
 const getAllGroups = async (req, res) => {
-  console.log(process.env.NODE_ENV);
   try {
     if (process.env.NODE_ENV !== "development") {
       return res.sendStatus(403);
@@ -93,7 +92,6 @@ const getGroupUsers = async (req, res) => {
 
   // check if the user is part of that group
   try {
-    console.log(req.body.groupId);
     const { users } = await (
       await Group.findById(req.body.groupId, "users -_id").populate(
         "users",

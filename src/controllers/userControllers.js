@@ -43,16 +43,15 @@ const signupUser = async (req, res) => {
     // Catch what kind of error thrown
     if (e.errors) {
       let error = e.errors;
-
       // Send error if duplicate username or email
       if (error.username) {
-        res.status(400).send(error.username.message);
+        return res.status(400).send({ error: error.username.message });
       }
       if (error.email) {
-        res.status(400).send(error.email.message);
+        return res.status(400).send({ error: error.email.message });
       }
     }
-    res.status(400).send(e);
+    return res.status(400).send({ error: "Error signing up" });
   }
 };
 
@@ -78,7 +77,7 @@ or
 
     res.send({ user, token });
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error: error });
   }
 };
 
