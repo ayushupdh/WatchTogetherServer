@@ -3,33 +3,33 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const moviesSchema = new Schema({
-  name: {
+  title: {
     type: String,
     required: true,
     trim: true,
   },
-  poster_image: {
+  adult: {
+    type: Boolean,
+    required: true,
+  },
+  poster_path: {
     type: String,
+    required: true,
   },
   genres: [
     {
       type: String,
     },
   ],
-  language: [
+  spoken_languages: [
     {
       type: String,
     },
   ],
-  description: {
+  overview: {
     type: String,
   },
-  directors: [
-    {
-      type: String,
-    },
-  ],
-  producers: [
+  production_companies: [
     {
       type: String,
     },
@@ -37,21 +37,50 @@ const moviesSchema = new Schema({
   release_date: {
     type: String,
   },
-  Revenue: {
-    type: String,
+  budget: {
+    type: Number,
+    required: true,
   },
-  trailer_video_link: {
-    type: String,
+  revenue: {
+    type: Number,
+    required: true,
+  },
+  trailer: {
+    site: {
+      type: String,
+    },
+    key: {
+      type: String,
+    },
+    size: {
+      type: Number,
+    },
   },
   runtime: {
+    type: Number,
+    required: true,
+  },
+  id: {
+    type: Number,
+    required: true,
+  },
+  imdb_id: {
     type: String,
   },
-  ratings: {
-    type: String,
-  },
-  cast: [
+  providers: [
     {
-      type: String,
+      display_priority: {
+        type: Number,
+      },
+      logo_path: {
+        type: String,
+      },
+      provider_id: {
+        type: Number,
+      },
+      provider_name: {
+        type: String,
+      },
     },
   ],
 });
