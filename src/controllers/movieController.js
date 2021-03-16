@@ -43,8 +43,9 @@ const getNRandomMovies = async (req, res) => {
     let matchQuery = {};
 
     if (req.query.genres && req.query.genres !== 0) {
-      matchQuery.genres = { $in: req.query.genres };
+      matchQuery.genres = { $in: JSON.parse(req.query.genres) };
     }
+    console.log(matchQuery);
     const movies = await Movies.aggregate([
       { $match: matchQuery },
       { $sample: { size: qty } },
@@ -59,6 +60,7 @@ const getNRandomMovies = async (req, res) => {
     ]);
     res.status(200).send(movies);
   } catch (error) {
+    res.sendStatus(500);
     console.log(error);
   }
 };
