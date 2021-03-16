@@ -54,6 +54,18 @@ const userSchema = new Schema(
         ref: "User",
       },
     ],
+    liked_movies: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Movie",
+      },
+    ],
+    disliked_movies: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Movie",
+      },
+    ],
     tokens: [
       {
         token: {

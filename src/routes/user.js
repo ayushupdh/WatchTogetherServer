@@ -16,6 +16,9 @@ const {
   removeUsersFriends,
   changeUsersStatus,
   getUsersGroup,
+  getLikedMovies,
+  addtoLikedMovies,
+  addtoDislikedMovies,
 } = require("../controllers/userControllers.js");
 
 // TO do
@@ -65,6 +68,19 @@ router.patch("/users/me/status", auth, changeUsersStatus);
 router.get("/users/me/groups", auth, getUsersGroup);
 
 // --------------------------User Account Ends--------------------------------
+
+// --------------------------User Movie routes--------------------------------
+
+// Get user liked movies
+router.get("/users/me/likedMovies", auth, getLikedMovies);
+
+// Add to  user liked movies
+router.post("/users/me/likedMovies", auth, addtoLikedMovies);
+
+// Add to  user disliked movies
+router.post("/users/me/dislikedMovies", auth, addtoDislikedMovies);
+
+// --------------------------User Movie routes end--------------------------------
 
 // const checkforUniqueEmailorUsername=async(email,username)=>{
 //     const emailUser = await User.findOne({email})
