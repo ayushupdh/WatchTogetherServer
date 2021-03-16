@@ -27,21 +27,24 @@ const dumpAllMovies = async (req, res) => {
 
 const getNRandomMovies = async (req, res) => {
   /*
-  Body should look like:
+  Params format:
     {
     "qty":Number,
     "genres":Array[]
     }
     */
   try {
-    const qty = parseInt(req.body.qty, 10);
-    let matchQuery = {};
+    let qty = 10;
 
-    if (req.body.genres && req.body.genres.length !== 0) {
-      genres = req.body.genres;
-      matchQuery.genres = { $in: req.body.genres };
+    if (req.query.qty && req.query.qty !== "") {
+      qty = parseInt(req.query.qty, 10);
     }
 
+    let matchQuery = {};
+
+    if (req.query.genres && req.query.genres !== 0) {
+      matchQuery.genres = { $in: req.query.genres };
+    }
     const movies = await Movies.aggregate([
       { $match: matchQuery },
       { $sample: { size: qty } },
@@ -54,10 +57,21 @@ const getNRandomMovies = async (req, res) => {
         },
       },
     ]);
-
     res.status(200).send(movies);
   } catch (error) {
     console.log(error);
+  }
+};
+
+const getMovieInfo = async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const movie = await Movies.findById(_id);
+
+    res.status(200).send(movie);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(404);
   }
 };
 
@@ -65,4 +79,5 @@ module.exports = {
   getAllMovies,
   getNRandomMovies,
   dumpAllMovies,
+  getMovieInfo,
 };
