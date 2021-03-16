@@ -8,6 +8,7 @@ const {
   getGroupInfo,
   addUsertogroup,
   getGroupUsers,
+  deleteGroup,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -35,5 +36,8 @@ router.get("/groups/activeUsers", auth, () => {});
 
 // Get groups info
 router.get("/groups/:id", auth, getGroupInfo);
+
+// Get groups info
+router.delete("/groups/:id", auth, deleteGroup);
 
 module.exports = router;

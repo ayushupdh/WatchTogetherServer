@@ -42,7 +42,6 @@ const createGroup = async (req, res) => {
   body: {
         name: String,
         current_session_time: Number,
-            created_by: User._id
   }
   */
   try {
@@ -76,7 +75,7 @@ const addUsertogroup = async (req, res) => {
 
       return res.sendStatus(200);
     }
-    return res.status(401);
+    return res.status(403);
   } catch (error) {
     console.log(error);
     return res.status(404).send({ error: "The group does not exists" });
@@ -106,6 +105,19 @@ const getGroupUsers = async (req, res) => {
   }
   // add the user to a group
 };
+
+const deleteGroup = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+
+    await Group.findByIdAndRemove(groupId);
+
+    return res.sendStatus(200);
+  } catch (error) {
+    return res.sendStatus(400);
+  }
+};
+
 module.exports = {
   getAllGroups,
   createGroup,
@@ -113,4 +125,5 @@ module.exports = {
   getGroupInfo,
   addUsertogroup,
   getGroupUsers,
+  deleteGroup,
 };

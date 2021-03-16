@@ -4,8 +4,8 @@
   "description": "Server for WatchTogether",
   "main": "index.js",
   "scripts": {
-    "start": "npm start",
-    "dev": "env-cmd -f ./config/dev.env nodemon src/index.js --trace-warnings",
+    "start": "env-cmd -f ./config/dev.env node --trace-warnings src/index.js ",
+    "dev": "env-cmd -f ./config/dev.env nodemon src/index.js ",
     "test": "env-cmd -f ./config/test.env jest  --watch --runInBand "
   },
   "author": "Ayush Upadhyay",
@@ -17,7 +17,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.18",
     "validator": "^13.5.2"
-  }, 
+  },
   "jest": {
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
