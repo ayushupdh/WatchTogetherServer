@@ -19,6 +19,7 @@ const {
   getLikedMovies,
   addtoLikedMovies,
   addtoDislikedMovies,
+  searchUser,
 } = require("../controllers/userControllers.js");
 
 // TO do
@@ -29,6 +30,9 @@ router.get("/users/getAll", getAllUsers);
 
 // Dump all users
 router.delete("/users/dumpAll", deleteAllUsers);
+
+// Search Users
+router.get("/users/search", auth, searchUser);
 
 // --------------------------Auth Routes--------------------------------
 // Signup user

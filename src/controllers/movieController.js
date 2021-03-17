@@ -43,7 +43,7 @@ const getNRandomMovies = async (req, res) => {
     let matchQuery = {};
 
     if (req.query.genres && req.query.genres !== 0) {
-      matchQuery.genres = { $in: JSON.parse(req.query.genres) };
+      matchQuery.genres = { $in: req.query.genres };
     }
     console.log(matchQuery);
     const movies = await Movies.aggregate([

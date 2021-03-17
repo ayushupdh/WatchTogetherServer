@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Group = require("../models/group");
 
+// TODO Add user avatar on add friends
 const getAllUsers = async (req, res) => {
   try {
     if (process.env.NODE_ENV !== "development") {
@@ -22,6 +23,27 @@ const deleteAllUsers = async (req, res) => {
     res.status(205).send({ message: "Users Deleted" });
   } catch (e) {
     console.log({ errors: e });
+  }
+};
+
+const searchUser = async (req, res) => {
+  try {
+    const searchQuery = req.query.username;
+    let users = undefined;
+    users = await User.find(
+      { username: new RegExp(searchQuery, "i"), _id: { $ne: req.user._id } },
+      "username name"
+    ).sort("name");
+    if (!users || users.length === 0) {
+      users = await User.find(
+        { email: new RegExp(searchQuery, "i"), _id: { $ne: req.user._id } },
+        "username name"
+      ).sort("name");
+    }
+    res.status(200).send(users);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(400);
   }
 };
 
@@ -132,6 +154,7 @@ const deleteUsersAccount = async (req, res) => {
 const getUsersFriends = async (req, res) => {
   try {
     // Populate friends feild
+    // !Add user avatar too later
     await req.user.populate("friends", "name username").execPopulate();
 
     return res.status(200).send({ friends: req.user.friends });
@@ -231,7 +254,6 @@ const removeUsersFriends = async (req, res) => {
     res.status(404).send({ error: e.message });
   }
 };
-
 const changeUsersStatus = async (req, res) => {
   /*  body should look like:
         {  status: boolean  }
@@ -263,6 +285,47 @@ const getUsersGroup = async (req, res) => {
     res.status(404).send(error.message);
   }
 };
+// TODO: Paginate movies you send
+const getLikedMovies = async (req, res) => {
+  try {
+    const user = req.user;
+    // const likedMovies= await User.findById(user._id);
+    res.status(200).send(user.liked_movies);
+  } catch (error) {
+    res.sendStatus(400);
+  }
+};
+
+const addtoLikedMovies = async (req, res) => {
+  try {
+    const userID = req.user._id;
+    const movieID = req.body.movieId;
+
+    await User.findByIdAndUpdate(userID, {
+      $addToSet: { liked_movies: movieID },
+    });
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+};
+
+const addtoDislikedMovies = async (req, res) => {
+  try {
+    const userID = req.user._id;
+    const movieID = req.body.movieId;
+
+    await User.findByIdAndUpdate(userID, {
+      $addToSet: { disliked_movies: movieID },
+    });
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+};
+
 module.exports = {
   getAllUsers,
   deleteAllUsers,
@@ -277,4 +340,8 @@ module.exports = {
   removeUsersFriends,
   changeUsersStatus,
   getUsersGroup,
+  getLikedMovies,
+  addtoLikedMovies,
+  addtoDislikedMovies,
+  searchUser,
 };
