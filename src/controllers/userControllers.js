@@ -162,6 +162,7 @@ const getUsersFriends = async (req, res) => {
     console.log(e);
   }
 };
+// !Might need to change later
 const addUsersFriends = async (req, res) => {
   /*  body should look like:
         {
@@ -173,6 +174,7 @@ const addUsersFriends = async (req, res) => {
         }
 
    */
+
   try {
     // check if the friend is oneself
     if (
@@ -202,6 +204,10 @@ const addUsersFriends = async (req, res) => {
     await User.updateOne(
       { _id: req.user._id },
       { $addToSet: { friends: friend._id } }
+    );
+    await User.updateOne(
+      { _id: friend._id },
+      { $addToSet: { friends: req.user._id } }
     );
 
     return res.sendStatus(200);

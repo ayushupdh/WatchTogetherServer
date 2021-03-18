@@ -139,9 +139,16 @@ userSchema.methods.toJSON = function () {
 
 //not object dependent. Use on the class
 userSchema.statics.findByCredentials = async (usernameOrEmail, password) => {
-  let user = await User.findOne({ email: usernameOrEmail });
+  let user = await User.findOne(
+    { email: usernameOrEmail },
+    "-liked_movies -disliked_movies -friends "
+  );
   if (!user) {
-    user = await User.findOne({ username: usernameOrEmail });
+    user = await User.findOne(
+      { username: usernameOrEmail },
+      "-liked_movies -disliked_movies -friends "
+    );
+
     if (!user) {
       throw new Error("User not found");
     }
