@@ -20,6 +20,7 @@ const {
   addtoLikedMovies,
   addtoDislikedMovies,
   searchUser,
+  searchUsersFriend,
 } = require("../controllers/userControllers.js");
 
 // TO do
@@ -58,6 +59,9 @@ router.delete("/users/me", auth, deleteUsersAccount);
 
 // Get user's friends
 router.get("/users/me/friend", auth, getUsersFriends);
+
+// Search user's friends
+router.get("/users/me/searchFriend", auth, searchUsersFriend);
 
 // Add a friend to user account
 router.patch("/users/me/friend", auth, addUsersFriends);

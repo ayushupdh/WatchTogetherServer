@@ -47,6 +47,29 @@ const searchUser = async (req, res) => {
   }
 };
 
+const searchUsersFriend = async (req, res) => {
+  try {
+    const searchQuery = req.query.username;
+    let users = await User.find({ _id: req.user._id }).populate({
+      path: "friends",
+      match: {
+        $or: [
+          { username: new RegExp(searchQuery, "i") },
+          { email: new RegExp(searchQuery, "i") },
+        ],
+      },
+      select: "name username email",
+    });
+    if (users && users.length === 1) {
+      return res.status(200).send(users[0].friends);
+    } else {
+      return res.sendStatus(404);
+    }
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(400);
+  }
+};
 const signupUser = async (req, res) => {
   /*body should look like
    {
@@ -350,4 +373,5 @@ module.exports = {
   addtoLikedMovies,
   addtoDislikedMovies,
   searchUser,
+  searchUsersFriend,
 };
