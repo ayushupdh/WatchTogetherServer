@@ -17,7 +17,9 @@ const getAllGroups = async (req, res) => {
 const getGroupInfo = async (req, res) => {
   try {
     const groups = await Group.findOne({ _id: req.params.id });
-    await groups.populate("users", "name username").execPopulate();
+    await groups
+      .populate("users created_by", "name username created_by")
+      .execPopulate();
     res.status(200).send(groups);
   } catch (e) {
     console.log(e);
