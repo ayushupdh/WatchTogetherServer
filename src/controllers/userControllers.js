@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Group = require("../models/group");
+const { findOne, findById } = require("../models/user");
 
 // TODO Add user avatar on add friends
 const getAllUsers = async (req, res) => {
@@ -31,15 +32,17 @@ const searchUser = async (req, res) => {
     const searchQuery = req.query.username;
     let users = undefined;
     users = await User.find(
-      { username: new RegExp(searchQuery, "i"), _id: { $ne: req.user._id } },
+      {
+        $or: [
+          {
+            username: searchQuery,
+            _id: { $ne: req.user._id },
+          },
+          { email: searchQuery, _id: { $ne: req.user._id } },
+        ],
+      },
       "username name"
     ).sort("name");
-    if (!users || users.length === 0) {
-      users = await User.find(
-        { email: new RegExp(searchQuery, "i"), _id: { $ne: req.user._id } },
-        "username name"
-      ).sort("name");
-    }
     res.status(200).send(users);
   } catch (error) {
     console.log(error);
@@ -58,7 +61,7 @@ const searchUsersFriend = async (req, res) => {
           { email: new RegExp(searchQuery, "i") },
         ],
       },
-      select: "name username email",
+      select: "name",
     });
     if (users && users.length === 1) {
       return res.status(200).send(users[0].friends);
@@ -317,10 +320,14 @@ const getUsersGroup = async (req, res) => {
 // TODO: Paginate movies you send
 const getLikedMovies = async (req, res) => {
   try {
-    const user = req.user;
-    // const likedMovies= await User.findById(user._id);
-    res.status(200).send(user.liked_movies);
+    // req.user.populate("liked_movies").execPopulate();
+    // !Change here to get backdrop path maybe
+    await req.user
+      .populate("liked_movies", "title poster_path overview")
+      .execPopulate();
+    res.status(200).send(req.user.liked_movies);
   } catch (error) {
+    console.log(error);
     res.sendStatus(400);
   }
 };
@@ -335,7 +342,6 @@ const addtoLikedMovies = async (req, res) => {
     });
     res.sendStatus(200);
   } catch (error) {
-    console.log(error);
     res.sendStatus(500);
   }
 };
