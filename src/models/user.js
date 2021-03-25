@@ -46,7 +46,7 @@ const userSchema = new Schema(
       default: false,
     },
     avatar: {
-      type: Buffer,
+      type: String,
     },
     friends: [
       {

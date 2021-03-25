@@ -1,6 +1,8 @@
 const User = require("../models/user");
 const Group = require("../models/group");
-const { findOne, findById } = require("../models/user");
+const upload = require("../services/multerUpload");
+const deleteFileFromS3 = require("../services/deleteFile");
+const singleUpload = upload.single("avatar");
 
 // TODO Add user avatar on add friends
 const getAllUsers = async (req, res) => {
@@ -157,14 +159,82 @@ const logoutUserEveryWhere = async (req, res) => {
 };
 const getUsersAccount = async (req, res) => {
   try {
-    await req.user
-      .populate({
-        path: "groups",
-      })
-      .execPopulate();
-    res.status(200).send(req.user);
+    const userObj = req.user.toObject();
+    delete userObj.tokens;
+    delete userObj.password;
+    delete userObj.disliked_movies;
+    delete userObj.liked_movies;
+    delete userObj.friends;
+    delete userObj.__v;
+    res.status(200).send(userObj);
   } catch (e) {
     console.log(e);
+  }
+};
+
+const changeUserInfo = async (req, res) => {
+  try {
+    const validChanges = ["username", "name", "email"];
+    const keyReceived = Object.keys(req.body);
+    let valid = true;
+    keyReceived.forEach((key) => {
+      if (!validChanges.includes(key)) {
+        valid = false;
+      }
+    });
+    if (!valid) {
+      return res.sendStatus(403);
+    }
+
+    await User.findByIdAndUpdate(req.user._id, req.body);
+
+    res.status(200).send("OK");
+  } catch (e) {
+    if (e.keyValue && e.keyValue.username) {
+      return res
+        .status(403)
+        .send({ usernameError: "Username is already taken." });
+    }
+    if (e.keyValue && e.keyValue.email) {
+      return res
+        .status(403)
+        .send({ emailError: "Account already exist with that email." });
+    }
+    return res.sendStatus(404);
+  }
+};
+
+const changeAvatar = async (req, res) => {
+  try {
+    singleUpload(req, res, async function (err) {
+      if (err) {
+        if (err.message && err.message === "File too large") {
+          err.message = "File size cannot be larger than 2 MB";
+        }
+        return res.status(403).send({
+          errors: {
+            type: "Image Upload Error",
+            message: err.message,
+          },
+        });
+      }
+      if (req.file) {
+        let update = { avatar: req.file.location };
+        let prevAvatar = req.user.avatar;
+        console.log(prevAvatar);
+        console.log(req.file.location);
+        await User.findByIdAndUpdate(req.user._id, update);
+        res.sendStatus(200);
+        if (prevAvatar && prevAvatar !== "") {
+          deleteFileFromS3(prevAvatar);
+        }
+      } else {
+        return res.sendStatus(404);
+      }
+    });
+  } catch (error) {
+    console.log(e);
+    res.sendStatus(500);
   }
 };
 
@@ -363,6 +433,7 @@ const addtoDislikedMovies = async (req, res) => {
 
 module.exports = {
   getAllUsers,
+  changeAvatar,
   deleteAllUsers,
   signupUser,
   loginUser,
@@ -380,4 +451,5 @@ module.exports = {
   addtoDislikedMovies,
   searchUser,
   searchUsersFriend,
+  changeUserInfo,
 };

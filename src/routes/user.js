@@ -2,8 +2,10 @@ const express = require("express");
 const User = require("../models/user");
 const router = new express.Router();
 const auth = require("../middleware/auth");
+// const multer = require("multer");
 const {
   getAllUsers,
+  changeUserInfo,
   deleteAllUsers,
   signupUser,
   loginUser,
@@ -21,7 +23,9 @@ const {
   addtoDislikedMovies,
   searchUser,
   searchUsersFriend,
+  changeAvatar,
 } = require("../controllers/userControllers.js");
+// const { upload } = require("../middleware/multerUpload");
 
 // TO do
 // Find out a way to remove pre hooks from user
@@ -57,6 +61,12 @@ router.get("/users/me", auth, getUsersAccount);
 // Deletes user account
 router.delete("/users/me", auth, deleteUsersAccount);
 
+// Change user info
+router.patch("/users/me/", auth, changeUserInfo);
+
+// Change user avatar
+router.patch("/users/me/avatar", auth, changeAvatar);
+
 // Get user's friends
 router.get("/users/me/friend", auth, getUsersFriends);
 
@@ -89,17 +99,20 @@ router.post("/users/me/likedMovies", auth, addtoLikedMovies);
 router.post("/users/me/dislikedMovies", auth, addtoDislikedMovies);
 
 // --------------------------User Movie routes end--------------------------------
-
-// const checkforUniqueEmailorUsername=async(email,username)=>{
-//     const emailUser = await User.findOne({email})
-
-//     if(emailUser){
-//         return {error: "Email already exists"}
-//     }
-//     const usernameUser = await User.findOne({username})
-//     if(usernameUser){
-//         return {error: "Username already exists"}
-//     }
-// }
+// router.post("/users/me/userPic", auth, (req, res) => {
+//   try {
+//     upload.single("image")(req, res, (err) => {
+//       if (err instanceof multer.MulterError) {
+//         return res.status(406).send({ error: err.message });
+//       } else if (err) {
+//         return res.status(406).send({ error: err.message });
+//       } else {
+//         return res.sendStatus(200);
+//       }
+//     });
+//   } catch (e) {
+//     return res.sendStatus(400);
+//   }
+// });
 
 module.exports = router;

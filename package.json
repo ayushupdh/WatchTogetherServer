@@ -11,11 +11,15 @@
   "author": "Ayush Upadhyay",
   "license": "ISC",
   "dependencies": {
+    "amazon-s3-uri": "^0.1.0",
+    "aws-sdk": "^2.871.0",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.11.18",
+    "mongoose": "^5.12.2",
+    "multer": "^1.4.2",
+    "multer-s3": "^2.9.0",
     "validator": "^13.5.2"
   },
   "jest": {
