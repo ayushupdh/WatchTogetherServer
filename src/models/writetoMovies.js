@@ -7,12 +7,12 @@ let movies = JSON.parse(moviesjson);
 
 const writeTODB = async () => {
   try {
-    //   Drop All
-    // await Movie.deleteMany();
+    // Drop All
+    await Movie.deleteMany();
     for (let i = 0; i < movies.length; i++) {
       console.log(movies[i].title);
       const movie = new Movie(movies[i]);
-      movie.save();
+      await movie.save();
     }
     console.log("Done");
   } catch (e) {

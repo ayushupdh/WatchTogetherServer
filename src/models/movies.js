@@ -9,11 +9,11 @@ const moviesSchema = new Schema(
       required: true,
       trim: true,
     },
-    adult: {
-      type: Boolean,
+    poster_path: {
+      type: String,
       required: true,
     },
-    poster_path: {
+    backdrop_path: {
       type: String,
       required: true,
     },
@@ -30,16 +30,11 @@ const moviesSchema = new Schema(
     overview: {
       type: String,
     },
-    production_companies: [
-      {
-        type: String,
-      },
-    ],
     release_date: {
       type: String,
     },
-    budget: {
-      type: Number,
+    status: {
+      type: String,
       required: true,
     },
     revenue: {
@@ -80,6 +75,40 @@ const moviesSchema = new Schema(
           type: Number,
         },
         provider_name: {
+          type: String,
+        },
+      },
+    ],
+    cast: [
+      {
+        name: {
+          type: String,
+        },
+        profile_path: {
+          type: String,
+        },
+        character: {
+          type: String,
+        },
+        order: {
+          type: Number,
+        },
+      },
+    ],
+    crew: [
+      {
+        name: {
+          type: String,
+        },
+        job: {
+          type: String,
+        },
+      },
+      {
+        name: {
+          type: String,
+        },
+        job: {
           type: String,
         },
       },

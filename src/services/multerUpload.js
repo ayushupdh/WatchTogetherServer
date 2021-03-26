@@ -21,7 +21,7 @@ const upload = multer({
     s3,
     bucket: process.env.BUCKET_NAME,
     key: function (req, file, cb) {
-      cb(null, Date.now().toString() + file.originalname);
+      cb(null, Date.now().toString() + "_" + file.originalname);
     },
   }),
 });

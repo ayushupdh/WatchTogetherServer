@@ -185,7 +185,6 @@ const changeUserInfo = async (req, res) => {
     if (!valid) {
       return res.sendStatus(403);
     }
-
     await User.findByIdAndUpdate(req.user._id, req.body);
 
     res.status(200).send("OK");
@@ -221,8 +220,7 @@ const changeAvatar = async (req, res) => {
       if (req.file) {
         let update = { avatar: req.file.location };
         let prevAvatar = req.user.avatar;
-        console.log(prevAvatar);
-        console.log(req.file.location);
+
         await User.findByIdAndUpdate(req.user._id, update);
         res.sendStatus(200);
         if (prevAvatar && prevAvatar !== "") {
