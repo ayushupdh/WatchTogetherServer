@@ -31,7 +31,7 @@ router.get("/groups/:id/users", auth, getGroupUsers);
 router.post("/groups/:id/users", auth, addUsertogroup);
 
 // Remove users from group
-router.delete("/groups/:id/users", auth, removeUserFromGroup);
+router.delete("/groups/:groupId/users/:userId", auth, removeUserFromGroup);
 
 // Start a new session in group
 

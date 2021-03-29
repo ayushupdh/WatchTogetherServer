@@ -16,10 +16,9 @@ const getAllGroups = async (req, res) => {
 
 const getGroupInfo = async (req, res) => {
   try {
-    console.log("ascas");
     const groups = await Group.findOne({ _id: req.params.id });
     await groups
-      .populate("users created_by", "name username created_by")
+      .populate("users created_by", "name username created_by avatar")
       .execPopulate();
     res.status(200).send(groups);
   } catch (e) {
@@ -86,13 +85,9 @@ const addUsertogroup = async (req, res) => {
 };
 
 const removeUserFromGroup = async (req, res) => {
-  /*    body:{
-            userId: Schema.Types.ObjectId,
-          }
-  }*/
   try {
-    const groupID = req.params.id;
-
+    const groupID = req.params.groupId;
+    const userID = req.params.userId;
     // check if the user is part of that group
     const { users } = await Group.findById(groupID, "users -_id");
     if (!users.includes(req.user._id)) {
@@ -100,7 +95,7 @@ const removeUserFromGroup = async (req, res) => {
       return res.sendStatus(403);
     }
     await Group.findByIdAndUpdate(groupID, {
-      $pull: { users: req.body.userId },
+      $pull: { users: userID },
     });
     res.sendStatus(200);
     // Background job to remove the group if there is no more member left
