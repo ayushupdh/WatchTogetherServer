@@ -59,7 +59,7 @@ const getNRandomMovies = async (req, res) => {
         },
       },
     ]);
-    console.log(movies.length);
+
     res.status(200).send(movies);
   } catch (error) {
     res.sendStatus(500);

@@ -39,8 +39,10 @@ const groupSchema = new Schema(
       required: true,
     },
   },
-  { toJson: { virtuals: true }, toObject: { virtuals: true }, id: false },
   {
+    toJson: { virtuals: true },
+    toObject: { virtuals: true },
+    id: false,
     timestamps: true,
   }
 );

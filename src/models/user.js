@@ -75,9 +75,10 @@ const userSchema = new Schema(
       },
     ],
   },
-  { toJson: { virtuals: true }, toObject: { virtuals: true }, id: false },
-
   {
+    toJson: { virtuals: true },
+    toObject: { virtuals: true },
+    id: false,
     timestamps: true,
   }
 );

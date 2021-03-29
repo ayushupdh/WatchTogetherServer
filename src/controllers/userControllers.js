@@ -378,7 +378,9 @@ const changeUsersStatus = async (req, res) => {
 // !Not tested ---GROUP
 const getUsersGroup = async (req, res) => {
   try {
-    await req.user.populate("groups").execPopulate();
+    await req.user
+      .populate({ path: "groups", options: { sort: { createdAt: -1 } } })
+      .execPopulate();
 
     return res.status(200).send({ groups: req.user.groups });
   } catch (error) {
