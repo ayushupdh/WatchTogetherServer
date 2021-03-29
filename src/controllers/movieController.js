@@ -31,23 +31,20 @@ const getNRandomMovies = async (req, res) => {
     {
     "qty":Number,
     "genres":Array[]
+    "lang":Array[]
+    "providers":Array[]
     }
     */
   try {
-    let qty = 10;
+    let { qty, genres, lang, providers } = req.query;
 
-    if (req.query.qty && req.query.qty !== "") {
-      qty = parseInt(req.query.qty, 10);
+    if (qty && qty !== "") {
+      qty = parseInt(qty, 10);
+    } else {
+      qty = 10;
     }
-    let matchQuery = {};
+    let matchQuery = generateQuery(genres, lang, providers);
 
-    if (req.query.genres && req.query.genres.length !== 0) {
-      if (typeof req.query.genres === "string") {
-        req.query.genres = JSON.parse(req.query.genres);
-      }
-      matchQuery.genres = { $in: req.query.genres };
-    }
-    console.log(matchQuery);
     const movies = await Movies.aggregate([
       { $match: matchQuery },
       { $sample: { size: qty } },
@@ -57,14 +54,46 @@ const getNRandomMovies = async (req, res) => {
           title: "$title",
           genres: "$genres",
           poster_path: "$poster_path",
+          // spoken_languages: "$spoken_languages",
+          // provs: "$providers.provider_name",
         },
       },
     ]);
+    console.log(movies.length);
     res.status(200).send(movies);
   } catch (error) {
     res.sendStatus(500);
     console.log(error);
   }
+};
+
+const generateQuery = (genres, lang, providers) => {
+  let matchQuery = [];
+
+  if (genres && genres.length !== 0) {
+    if (typeof genres === "string") {
+      genres = JSON.parse(genres);
+    }
+    matchQuery.push({ genres: { $in: genres } });
+  }
+  if (lang && lang.length !== 0) {
+    if (typeof lang === "string") {
+      lang = JSON.parse(lang);
+    }
+    matchQuery.push({ spoken_languages: { $in: lang } });
+  }
+  if (providers && providers.length !== 0) {
+    if (typeof providers === "string") {
+      providers = JSON.parse(providers);
+    }
+    matchQuery.push({ "providers.provider_name": { $in: providers } });
+  }
+
+  if (matchQuery.length === 0) {
+    return {};
+  }
+
+  return { $and: matchQuery };
 };
 
 const getMovieInfo = async (req, res) => {
