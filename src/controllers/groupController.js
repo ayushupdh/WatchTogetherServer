@@ -16,6 +16,7 @@ const getAllGroups = async (req, res) => {
 
 const getGroupInfo = async (req, res) => {
   try {
+    console.log("ascas");
     const groups = await Group.findOne({ _id: req.params.id });
     await groups
       .populate("users created_by", "name username created_by")
@@ -62,19 +63,18 @@ const createGroup = async (req, res) => {
 const addUsertogroup = async (req, res) => {
   /*    body:{
             userId: Schema.Types.ObjectId,
-            groupID: Schema.Types.ObjectId
           }
   }*/
 
   // check if the user is part of that group
   try {
-    const { users } = await Group.findById(req.body.groupId, "users -_id");
+    const groupID = req.params.id;
+    const { users } = await Group.findById(groupID, "users -_id");
 
     if (users.includes(req.user._id)) {
-      await Group.findByIdAndUpdate(req.body.groupId, {
-        users: users.concat(req.body.userId),
+      await Group.findByIdAndUpdate(groupID, {
+        $addToSet: { users: req.body.userId },
       });
-
       return res.sendStatus(200);
     }
     return res.status(403);
@@ -85,8 +85,35 @@ const addUsertogroup = async (req, res) => {
   // add the user to a group
 };
 
-const getGroupUsers = async (req, res) => {
+const removeUserFromGroup = async (req, res) => {
   /*    body:{
+            userId: Schema.Types.ObjectId,
+          }
+  }*/
+  try {
+    const groupID = req.params.id;
+
+    // check if the user is part of that group
+    const { users } = await Group.findById(groupID, "users -_id");
+    if (!users.includes(req.user._id)) {
+      removeGroupHelper(groupID);
+      return res.sendStatus(403);
+    }
+    await Group.findByIdAndUpdate(groupID, {
+      $pull: { users: req.body.userId },
+    });
+    res.sendStatus(200);
+    // Background job to remove the group if there is no more member left
+    removeGroupHelper(groupID);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).send({ error: "The group does not exists" });
+  }
+  // add the user to a group
+};
+
+const getGroupUsers = async (req, res) => {
+  /*    query:{
             groupID: Schema.Types.ObjectId
           }
   }*/
@@ -94,7 +121,7 @@ const getGroupUsers = async (req, res) => {
   // check if the user is part of that group
   try {
     const { users } = await (
-      await Group.findById(req.body.groupId, "users -_id").populate(
+      await Group.findById(req.params.id, "users -_id").populate(
         "users",
         "name _id username email"
       )
@@ -110,6 +137,9 @@ const getGroupUsers = async (req, res) => {
 
 const deleteGroup = async (req, res) => {
   try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.sendStatus(403);
+    }
     const groupId = req.params.id;
 
     await Group.findByIdAndRemove(groupId);
@@ -117,6 +147,14 @@ const deleteGroup = async (req, res) => {
     return res.sendStatus(200);
   } catch (error) {
     return res.sendStatus(400);
+  }
+};
+
+const removeGroupHelper = async (groupID) => {
+  const groups = await Group.findById(groupID, "users -_id");
+
+  if (groups.users && groups.users.length === 0) {
+    await Group.deleteOne({ _id: groupID });
   }
 };
 
@@ -128,4 +166,5 @@ module.exports = {
   addUsertogroup,
   getGroupUsers,
   deleteGroup,
+  removeUserFromGroup,
 };

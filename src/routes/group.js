@@ -9,6 +9,7 @@ const {
   addUsertogroup,
   getGroupUsers,
   deleteGroup,
+  removeUserFromGroup,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -20,11 +21,17 @@ router.delete("/groups/dumpAll", auth, dumpAllGroups);
 // Create a group
 router.post("/groups/create", auth, createGroup);
 
+// Get groups info
+router.get("/groups/:id", auth, getGroupInfo);
+
 // Get group users
-router.get("/groups/users", auth, getGroupUsers);
+router.get("/groups/:id/users", auth, getGroupUsers);
 
 // Add users to group
-router.post("/groups/addUser", auth, addUsertogroup);
+router.post("/groups/:id/users", auth, addUsertogroup);
+
+// Remove users from group
+router.delete("/groups/:id/users", auth, removeUserFromGroup);
 
 // Start a new session in group
 
@@ -34,10 +41,7 @@ router.post("/groups/activeUsers", auth, () => {});
 // Get active users
 router.get("/groups/activeUsers", auth, () => {});
 
-// Get groups info
-router.get("/groups/:id", auth, getGroupInfo);
-
-// Get groups info
+// !Delete group  Needs to be updated
 router.delete("/groups/:id", auth, deleteGroup);
 
 module.exports = router;
