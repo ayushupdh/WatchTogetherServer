@@ -43,7 +43,7 @@ const searchUser = async (req, res) => {
           { email: searchQuery, _id: { $ne: req.user._id } },
         ],
       },
-      "username name"
+      "username name avatar"
     ).sort("name");
     res.status(200).send(users);
   } catch (error) {
@@ -63,7 +63,7 @@ const searchUsersFriend = async (req, res) => {
           { email: new RegExp(searchQuery, "i") },
         ],
       },
-      select: "name",
+      select: "name avatar",
     });
     if (users && users.length === 1) {
       return res.status(200).send(users[0].friends);
@@ -174,6 +174,7 @@ const getUsersAccount = async (req, res) => {
 
 const changeUserInfo = async (req, res) => {
   try {
+    const user = req.user;
     const validChanges = ["username", "name", "email"];
     const keyReceived = Object.keys(req.body);
     let valid = true;
@@ -185,7 +186,7 @@ const changeUserInfo = async (req, res) => {
     if (!valid) {
       return res.sendStatus(403);
     }
-    await User.findByIdAndUpdate(req.user._id, req.body);
+    await User.findByIdAndUpdate(user._id, req.body);
 
     res.status(200).send("OK");
   } catch (e) {
@@ -249,7 +250,7 @@ const getUsersFriends = async (req, res) => {
   try {
     // Populate friends feild
     // !Add user avatar too later
-    await req.user.populate("friends", "name username").execPopulate();
+    await req.user.populate("friends", "name username avatar").execPopulate();
 
     return res.status(200).send({ friends: req.user.friends });
   } catch (e) {
