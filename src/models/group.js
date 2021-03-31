@@ -9,30 +9,22 @@ const groupSchema = new Schema(
       trim: true,
       required: true,
     },
-    active_users: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
     users: [
       {
         type: Schema.Types.ObjectId,
         ref: "User",
       },
     ],
-    // liked_movies: [Movies],
-    // disliked_movies: [Movies],
+    session_active: {
+      type: Boolean,
+      default: false,
+    },
     sessions: [
       {
-        type: Date,
-        default: Date.now(),
+        type: Schema.Types.ObjectId,
+        ref: "Session",
       },
     ],
-    current_session_time: {
-      type: Number,
-      required: true,
-    },
     created_by: {
       type: Schema.Types.ObjectId,
       ref: "User",
