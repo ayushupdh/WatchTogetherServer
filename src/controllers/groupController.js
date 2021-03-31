@@ -118,7 +118,7 @@ const getGroupUsers = async (req, res) => {
     const { users } = await (
       await Group.findById(req.params.id, "users -_id").populate(
         "users",
-        "name _id username email"
+        "name avatar _id"
       )
     ).execPopulate();
 
