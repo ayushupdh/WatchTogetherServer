@@ -52,6 +52,41 @@ const searchUser = async (req, res) => {
   }
 };
 
+const getOtherUserInfo = async (req, res) => {
+  // {
+  //   "id":"6061542ca6b5721fa152fdf1"
+  // }
+  try {
+    const userID = req.query.id;
+    if (!userID) {
+      return res.sendStatus(403);
+    }
+    let user = {};
+    const isUserFriend = req.user.friends.includes(userID);
+    if (isUserFriend) {
+      user = await User.findById(userID)
+        .populate({
+          path: "groups",
+          select: "_id -users",
+        })
+        .select("name username avatar liked_movies groups");
+      user = user.toJSON();
+      user.isFriend = true;
+      user.groups = user.groups.length;
+      user.liked_movies = user.liked_movies.length;
+    } else {
+      user = await User.findById(userID).select("name username avatar");
+      user = user.toJSON();
+
+      user.isFriend = false;
+    }
+    return res.send(user);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+};
+
 const searchUsersFriend = async (req, res) => {
   try {
     const searchQuery = req.query.username;
@@ -84,6 +119,7 @@ const signupUser = async (req, res) => {
        "password":"password123"
    } 
    */
+  req.body.avatar = "";
   const user = new User(req.body);
   try {
     await user.save();
@@ -394,7 +430,7 @@ const getLikedMovies = async (req, res) => {
     // req.user.populate("liked_movies").execPopulate();
     // !Change here to get backdrop path maybe
     await req.user
-      .populate("liked_movies", "title poster_path overview")
+      .populate("liked_movies", "title poster_path overview genres")
       .execPopulate();
     res.status(200).send(req.user.liked_movies);
   } catch (error) {
@@ -434,6 +470,7 @@ const addtoDislikedMovies = async (req, res) => {
 
 module.exports = {
   getAllUsers,
+  getOtherUserInfo,
   changeAvatar,
   deleteAllUsers,
   signupUser,

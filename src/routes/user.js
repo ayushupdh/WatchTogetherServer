@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 // const multer = require("multer");
 const {
   getAllUsers,
+  getOtherUserInfo,
   changeUserInfo,
   deleteAllUsers,
   signupUser,
@@ -73,6 +74,9 @@ router.get("/users/me/friend", auth, getUsersFriends);
 // Search user's friends
 router.get("/users/me/searchFriend", auth, searchUsersFriend);
 
+// Search user's friends
+router.get("/users/me/otherUserInfo", auth, getOtherUserInfo);
+
 // Add a friend to user account
 router.patch("/users/me/friend", auth, addUsersFriends);
 
@@ -99,20 +103,5 @@ router.post("/users/me/likedMovies", auth, addtoLikedMovies);
 router.post("/users/me/dislikedMovies", auth, addtoDislikedMovies);
 
 // --------------------------User Movie routes end--------------------------------
-// router.post("/users/me/userPic", auth, (req, res) => {
-//   try {
-//     upload.single("image")(req, res, (err) => {
-//       if (err instanceof multer.MulterError) {
-//         return res.status(406).send({ error: err.message });
-//       } else if (err) {
-//         return res.status(406).send({ error: err.message });
-//       } else {
-//         return res.sendStatus(200);
-//       }
-//     });
-//   } catch (e) {
-//     return res.sendStatus(400);
-//   }
-// });
 
 module.exports = router;
