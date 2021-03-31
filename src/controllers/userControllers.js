@@ -347,34 +347,10 @@ const addUsersFriends = async (req, res) => {
   }
 };
 const removeUsersFriends = async (req, res) => {
-  /*  body should look like:
-        {
-            friend: email@example.com
-        }
-        or
-         {
-            friend: username
-        }
-
-   */
   try {
-    let friend = await User.findOne({ username: req.body.friend });
-
-    // check if the friend user exists
-    if (!friend) {
-      friend = await User.findOne({ email: req.friend });
-      if (!friend) {
-        throw Error("No user with that username or email");
-      }
-    }
-    // check if the friend is oneself
-    if (friend._id.equals(req.user._id)) {
-      throw new Error("Cannot be the users own id");
-    }
+    let friendID = req.query.id;
     // check if friend is already in the friends list
-    let exist = req.user.friends.find((friendId) =>
-      friendId.equals(friend._id)
-    );
+    let exist = req.user.friends.find((friendId) => friendId.equals(friendID));
 
     // !Not tested
     if (!exist) {
@@ -383,7 +359,11 @@ const removeUsersFriends = async (req, res) => {
 
     await User.updateOne(
       { _id: req.user._id },
-      { $pull: { friends: friend._id } }
+      { $pull: { friends: friendID } }
+    );
+    await User.updateOne(
+      { _id: friendID },
+      { $pull: { friends: req.user._id } }
     );
 
     return res.sendStatus(200);
