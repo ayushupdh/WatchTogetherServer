@@ -16,6 +16,8 @@ const {
   removeUserFromSession,
   getMoviesForSession,
   addToMoviesLiked,
+  getSessionInfo,
+  endSession,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -29,8 +31,11 @@ router.delete("/groups/dumpAll", auth, dumpAllGroups);
 // Create a new Session
 router.post("/groups/session", auth, createSession);
 
+// Create a new Session
+router.post("/groups/session/end", auth, endSession);
+
 // Get session info
-router.get("/groups/session", auth, () => {});
+router.get("/groups/session", auth, getSessionInfo);
 
 // Get session info
 router.get("/groups/session/users", auth, getActiveUsers);

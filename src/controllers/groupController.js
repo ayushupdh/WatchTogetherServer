@@ -1,5 +1,13 @@
+const { isValidObjectId } = require("mongoose");
 const Group = require("../models/group");
+const Session = require("../models/session");
+const User = require("../models/user");
+const Movie = require("../models/movies");
 
+const createMovieObject = (id) => {
+  return { movie: "605da28ddc4fc974181cd682", liked_by: [], like_count: 0 };
+};
+// !Turn Session active false at some point
 const getAllGroups = async (req, res) => {
   try {
     if (process.env.NODE_ENV !== "development") {
@@ -20,6 +28,7 @@ const getGroupInfo = async (req, res) => {
     await groups
       .populate("users created_by", "name username created_by avatar")
       .execPopulate();
+
     res.status(200).send(groups);
   } catch (e) {
     console.log(e);
@@ -43,11 +52,9 @@ const createGroup = async (req, res) => {
   /*
   body: {
         name: String,
-        current_session_time: Number,
   }
   */
   try {
-    req.body.sessions = [Date.now()];
     req.body.created_by = req.user._id;
     req.body.users = [req.user._id];
     const newGroup = new Group(req.body);
@@ -152,6 +159,356 @@ const removeGroupHelper = async (groupID) => {
     await Group.deleteOne({ _id: groupID });
   }
 };
+const getSessionInfo = async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.sendStatus(403);
+    }
+    const { sessionID } = req.query;
+    const sessions = await Session.findById(sessionID);
+    res.status(200).send(sessions);
+  } catch (e) {
+    console.log(e);
+    res.status(400).send(e);
+  }
+};
+
+// ----------------------------Session Controllers---------------------------------------------
+const createSession = async (req, res) => {
+  /*
+  body:{
+    groupID:"acascasc",
+    userID:""
+    current_session_time:10,
+    genres:[],
+    lang:[],
+    platform:[]
+
+  }
+  */
+  try {
+    const {
+      groupID,
+      userID,
+      genres,
+      lang,
+      platform,
+      currentSessionTime,
+    } = req.body;
+
+    if (!groupID || !userID || !currentSessionTime) {
+      return res.sendStatus(403);
+    }
+
+    if (!isValidObjectId(groupID) || !isValidObjectId(userID)) {
+      throw new Error("Invalid Object ID");
+    }
+
+    const groupExists = await Group.findById(groupID);
+    const userExists = await User.findById(userID);
+
+    if (!groupExists) {
+      throw new Error("Group Not Found");
+    }
+
+    if (!userExists) {
+      throw new Error("User Not Found");
+    }
+
+    const session = new Session({
+      groupID,
+      admin: userID,
+      active_users: [userID],
+      current_session_time: currentSessionTime,
+      params: { genre: genres, platform, lang },
+    });
+    session.save();
+
+    await Group.findByIdAndUpdate(groupID, {
+      session_active: true,
+      $addToSet: { sessions: session._id },
+    });
+
+    return res.send({ session });
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
+const getActiveUsers = async (req, res) => {
+  try {
+    const { sessionID } = req.query;
+    if (!sessionID) {
+      throw new Error("sessionID is required");
+    }
+    if (!isValidObjectId(sessionID)) {
+      throw new Error("Invalid Object id");
+    }
+
+    const users = await Session.findById(sessionID).select("active_users -_id");
+
+    return res.send(users);
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
+
+const addUserToSession = async (req, res) => {
+  /*
+  body:{
+    userID:"ACasc"
+    sessionID:"acasc"
+  }*/
+  try {
+    const { userID, sessionID } = req.body;
+    if (!userID || !sessionID) {
+      throw new Error("userID and sessionID is required");
+    }
+    if (!isValidObjectId(userID) || !isValidObjectId(sessionID)) {
+      throw new Error("Invalid Object id");
+    }
+    const userExists = await User.findById(userID);
+    if (!userExists) {
+      throw new Error("User does not exist");
+    }
+    await Session.findByIdAndUpdate(sessionID, {
+      $addToSet: { active_users: userID },
+    });
+    return res.sendStatus(200);
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
+const removeUserFromSession = async (req, res) => {
+  /*
+  body:{
+    userID:"ACasc"
+    sessionID:"acasc"
+  }*/
+  try {
+    const { userID, sessionID } = req.body;
+    if (!userID || !sessionID) {
+      throw new Error("userID and sessionID is required");
+    }
+    if (!isValidObjectId(userID) || !isValidObjectId(sessionID)) {
+      throw new Error("Invalid Object id");
+    }
+    const userExists = await User.findById(userID);
+    if (!userExists) {
+      throw new Error("User does not exist");
+    }
+    await Session.findByIdAndUpdate(sessionID, {
+      $pull: { active_users: userID },
+    });
+    return res.sendStatus(200);
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
+const getMoviesForSession = async (req, res) => {
+  try {
+    // Validate params and if session exists
+    let { sessionID, currentIndex, qty } = req.query;
+    if (!sessionID || !currentIndex || !qty) {
+      throw new Error("sessionID, currentIndex and qty are required");
+    }
+    // change from string to number
+    currentIndex = parseInt(currentIndex, 10);
+    qty = parseInt(qty, 10);
+
+    if (!isValidObjectId(sessionID)) {
+      throw new Error("Invalid Object id");
+    }
+
+    // Get the current session
+    const session = await Session.findById(sessionID).select(
+      "params movies_served -_id"
+    );
+    const { params, movies_served } = session;
+    // To store the movies
+    let movies = [];
+    // Get the movielist length from the session
+    let movie_served_len = movies_served.length;
+
+    // if the movie list is smaller than the currentIndex and qty required amount, fetch movies from movie document
+    if (currentIndex + qty > movie_served_len) {
+      movies = await getNMovies(qty, params, movies_served);
+      // store the movies obtained in the sessions doc
+      const _ids = movies.map((movie) => movie._id);
+      await Session.findByIdAndUpdate(sessionID, {
+        $push: { movies_served: { $each: _ids } },
+      });
+      return res.send(movies);
+    }
+
+    const movieList = await session
+      .populate({
+        path: "movies_served",
+        select: "title  genres poster_path",
+        skip: currentIndex,
+        limit: qty,
+      })
+      .execPopulate();
+
+    movies = movieList.movies_served;
+    // movies = movieList.movies_served.slice(currentIndex, end);
+    return res.send(movies);
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send({ error: error.mesage });
+  }
+};
+
+const getNMovies = async (qty, params, movies_served) => {
+  try {
+    const query = generateQuery(
+      params.genre,
+      params.lang,
+      params.platform,
+      movies_served
+    );
+
+    const movies = await Movie.aggregate([
+      { $match: query },
+      { $sample: { size: qty } },
+      {
+        $project: {
+          _id: "$_id",
+          title: "$title",
+          genres: "$genres",
+          poster_path: "$poster_path",
+        },
+      },
+    ]);
+    return movies;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const generateQuery = (genres, lang, providers, movies_served) => {
+  let matchQuery = [];
+
+  if (genres && genres.length !== 0) {
+    if (typeof genres === "string") {
+      genres = JSON.parse(genres);
+    }
+    matchQuery.push({ genres: { $in: genres } });
+  }
+  if (lang && lang.length !== 0) {
+    if (typeof lang === "string") {
+      lang = JSON.parse(lang);
+    }
+    matchQuery.push({ spoken_languages: { $in: lang } });
+  }
+  if (providers && providers.length !== 0) {
+    if (typeof providers === "string") {
+      providers = JSON.parse(providers);
+    }
+    matchQuery.push({ "providers.provider_name": { $in: providers } });
+  }
+  const finalQuery = {};
+
+  if (movies_served.length > 0) {
+    matchQuery.push({ _id: { $ne: movies_served } });
+  }
+  if (matchQuery.length === 0) {
+    return finalQuery;
+  } else {
+    finalQuery["$or"] = matchQuery;
+  }
+
+  // if (movies_served.length > 0) {
+  //   finalQuery[""] = { _id: movies_served };
+  // }
+  return finalQuery;
+};
+
+const addToMoviesLiked = async (req, res) => {
+  /*
+  body:{
+    userID:"ACasc"
+    sessionID:"acasc"
+    movieId:"asacssc"
+  }*/
+  try {
+    const { userID, sessionID, movieID } = req.body;
+    // check for validity
+    if (!userID || !sessionID || !movieID) {
+      throw new Error("userID and sessionID is required");
+    }
+    if (
+      !isValidObjectId(userID) ||
+      !isValidObjectId(sessionID) ||
+      !isValidObjectId(movieID)
+    ) {
+      throw new Error("Invalid Object id");
+    }
+
+    const { movies_liked } = await Session.findById(sessionID);
+    const movieIDs = movies_liked.map((mov) => mov.movie);
+    console.log({ movieID });
+    // check if the movies_liked array is empty or if the array has the new movieID
+    if (movies_liked.length === 0 || !movieIDs.includes(movieID)) {
+      console.log({
+        check: movies_liked.length === 0 || !movieIDs.includes(movieID),
+      });
+      console.log("running");
+      await Session.findByIdAndUpdate(sessionID, {
+        $addToSet: {
+          movies_liked: { movie: movieID, liked_by: [userID], like_count: 1 },
+        },
+      });
+      console.log("Ran");
+
+      return res.sendStatus(200);
+    }
+    // find the index of the movieID in the  movies_liked array
+    const movieIndex = movieIDs.findIndex((mov) => {
+      return mov.equals(movieID);
+    });
+
+    // Get the liked_by array for that movieID
+    const likedBY = movies_liked[movieIndex].liked_by;
+    // Check if the user has already liked the movie
+    const isPresent = likedBY.includes(userID);
+    // If not run the update
+    if (!isPresent) {
+      await Session.updateOne(
+        {
+          _id: sessionID,
+          "movies_liked.movie": movieID,
+        },
+        {
+          $addToSet: { "movies_liked.$.liked_by": userID },
+          "movies_liked.$.like_count": likedBY.length + 1,
+        }
+      );
+    }
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send({ error: error.message });
+  }
+};
+const endSession = async (req, res) => {
+  /*
+  body:{
+    groupID:"acasc"
+  }*/
+  try {
+    const { groupID } = req.body;
+
+    await Group.findByIdAndUpdate(groupID, {
+      session_active: false,
+    });
+
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+};
+// ----------------------------Session Controllers end---------------------------------------------
 
 module.exports = {
   getAllGroups,
@@ -162,4 +519,12 @@ module.exports = {
   getGroupUsers,
   deleteGroup,
   removeUserFromGroup,
+  createSession,
+  getActiveUsers,
+  addUserToSession,
+  removeUserFromSession,
+  getMoviesForSession,
+  addToMoviesLiked,
+  getSessionInfo,
+  endSession,
 };

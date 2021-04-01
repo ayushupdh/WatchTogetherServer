@@ -27,12 +27,16 @@ const sessionSchema = new Schema(
           type: Schema.Types.ObjectId,
           ref: "Movie",
         },
-        liked_by: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
+        liked_by: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: [],
+          },
+        ],
         like_count: {
           type: Number,
+          default: 0,
         },
       },
     ],
