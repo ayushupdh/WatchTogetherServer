@@ -25,6 +25,7 @@ const {
   searchUser,
   searchUsersFriend,
   changeAvatar,
+  getMoviesforUser,
 } = require("../controllers/userControllers.js");
 // const { upload } = require("../middleware/multerUpload");
 
@@ -92,6 +93,9 @@ router.get("/users/me/groups", auth, getUsersGroup);
 // --------------------------User Account Ends--------------------------------
 
 // --------------------------User Movie routes--------------------------------
+
+// Get N random movies for user
+router.get("/users/me/movies", auth, getMoviesforUser);
 
 // Get user liked movies
 router.get("/users/me/likedMovies", auth, getLikedMovies);

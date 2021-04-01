@@ -1,5 +1,5 @@
 const User = require("../models/user");
-const Group = require("../models/group");
+const Movie = require("../models/movies");
 const upload = require("../services/multerUpload");
 const deleteFileFromS3 = require("../services/deleteFile");
 const singleUpload = upload.single("avatar");
@@ -396,9 +396,14 @@ const changeUsersStatus = async (req, res) => {
 const getUsersGroup = async (req, res) => {
   try {
     await req.user
-      .populate({ path: "groups", options: { sort: { createdAt: -1 } } })
+      .populate({
+        path: "groups",
+        options: {
+          select: "name session_active _id -users",
+          sort: { createdAt: -1 },
+        },
+      })
       .execPopulate();
-
     return res.status(200).send({ groups: req.user.groups });
   } catch (error) {
     console.log(error);
@@ -448,6 +453,86 @@ const addtoDislikedMovies = async (req, res) => {
     res.sendStatus(500);
   }
 };
+const getMoviesforUser = async (req, res) => {
+  try {
+    const params = req.query;
+    const movies_present = [
+      ...req.user.liked_movies,
+      ...req.user.disliked_movies,
+    ];
+    // console.log(movies);
+    const query = generateQuery(
+      params.genre,
+      params.lang,
+      params.platform,
+      movies_present
+    );
+    const movies = await getNMovies(10, query);
+
+    res.send(movies);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+};
+
+const getNMovies = async (qty, query) => {
+  try {
+    const movies = await Movie.aggregate([
+      { $match: query },
+      { $sample: { size: qty } },
+      {
+        $project: {
+          _id: "$_id",
+          title: "$title",
+          genres: "$genres",
+          poster_path: "$poster_path",
+        },
+      },
+    ]);
+    return movies;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const generateQuery = (genres, lang, providers, movies_present) => {
+  let matchQuery = [];
+
+  if (genres && genres.length !== 0) {
+    if (typeof genres === "string") {
+      genres = JSON.parse(genres);
+    }
+    matchQuery.push({ genres: { $in: genres } });
+  }
+  if (lang && lang.length !== 0) {
+    if (typeof lang === "string") {
+      lang = JSON.parse(lang);
+    }
+    matchQuery.push({ spoken_languages: { $in: lang } });
+  }
+  if (providers && providers.length !== 0) {
+    if (typeof providers === "string") {
+      providers = JSON.parse(providers);
+    }
+    matchQuery.push({ "providers.provider_name": { $in: providers } });
+  }
+  const finalQuery = {};
+
+  if (movies_present.length > 0) {
+    matchQuery.push({ _id: { $ne: movies_present } });
+  }
+  if (matchQuery.length === 0) {
+    return finalQuery;
+  } else {
+    finalQuery["$or"] = matchQuery;
+  }
+
+  // if (movies_served.length > 0) {
+  //   finalQuery[""] = { _id: movies_served };
+  // }
+  return finalQuery;
+};
 
 module.exports = {
   getAllUsers,
@@ -471,4 +556,5 @@ module.exports = {
   searchUser,
   searchUsersFriend,
   changeUserInfo,
+  getMoviesforUser,
 };
