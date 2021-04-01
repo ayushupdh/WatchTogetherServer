@@ -3,7 +3,7 @@ const Group = require("../models/group");
 const upload = require("../services/multerUpload");
 const deleteFileFromS3 = require("../services/deleteFile");
 const singleUpload = upload.single("avatar");
-
+const { runBG_RemoveOldDislikedMovies } = require("../services/background");
 // TODO Add user avatar on add friends
 const getAllUsers = async (req, res) => {
   try {
@@ -203,6 +203,7 @@ const getUsersAccount = async (req, res) => {
     delete userObj.friends;
     delete userObj.__v;
     res.status(200).send(userObj);
+    runBG_RemoveOldDislikedMovies(req.user);
   } catch (e) {
     console.log(e);
   }

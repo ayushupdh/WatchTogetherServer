@@ -223,13 +223,13 @@ const createSession = async (req, res) => {
       params: { genre: genres, platform, lang },
     });
     session.save();
-
+    res.send({ session });
     await Group.findByIdAndUpdate(groupID, {
       session_active: true,
       $addToSet: { sessions: session._id },
     });
 
-    return res.send({ session });
+    return;
   } catch (error) {
     return res.status(400).send({ error: error.message });
   }
@@ -246,7 +246,7 @@ const getActiveUsers = async (req, res) => {
 
     const users = await Session.findById(sessionID).select("active_users -_id");
 
-    return res.send(users);
+    return res.send({ users: users.active_users });
   } catch (error) {
     return res.status(400).send({ error: error.message });
   }

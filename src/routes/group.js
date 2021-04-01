@@ -31,13 +31,13 @@ router.delete("/groups/dumpAll", auth, dumpAllGroups);
 // Create a new Session
 router.post("/groups/session", auth, createSession);
 
-// Create a new Session
+// End a  new Session
 router.post("/groups/session/end", auth, endSession);
 
 // Get session info
 router.get("/groups/session", auth, getSessionInfo);
 
-// Get session info
+// Get Active users
 router.get("/groups/session/users", auth, getActiveUsers);
 
 // Add to active users

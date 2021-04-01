@@ -1,3 +1,4 @@
 node_modules
 config
 db_schema.json
+./src/models/data.json
