@@ -11,6 +11,21 @@ const getAllUsers = async (req, res) => {
       return res.sendStatus(403);
     }
     const users = await User.find();
+    // const users = await User.aggregate([
+    //   {
+    //     $match: {
+    //       $and: [{ name: "Ayush Upadhyay" }, { username: { $in: ["ayush"] } }],
+    //     },
+    //   },
+    //   { $sample: { size: 1 } },
+    //   {
+    //     $project: {
+    //       _id: "$_id",
+    //       name: "$name",
+    //     },
+    //   },
+    // ]);
+
     res.status(200).send(users);
   } catch (e) {
     console.log(e);
@@ -464,7 +479,7 @@ const getMoviesforUser = async (req, res) => {
     const query = generateQuery(
       params.genre,
       params.lang,
-      params.platform,
+      params.providers,
       movies_present
     );
     const movies = await getNMovies(10, query);
@@ -490,6 +505,7 @@ const getNMovies = async (qty, query) => {
         },
       },
     ]);
+
     return movies;
   } catch (error) {
     console.log(error);
@@ -518,14 +534,14 @@ const generateQuery = (genres, lang, providers, movies_present) => {
     matchQuery.push({ "providers.provider_name": { $in: providers } });
   }
   const finalQuery = {};
-
+  // nin to check in an array, ne to check specific string
   if (movies_present.length > 0) {
-    matchQuery.push({ _id: { $ne: movies_present } });
+    matchQuery.push({ _id: { $nin: movies_present } });
   }
   if (matchQuery.length === 0) {
     return finalQuery;
   } else {
-    finalQuery["$or"] = matchQuery;
+    finalQuery["$and"] = matchQuery;
   }
 
   // if (movies_served.length > 0) {

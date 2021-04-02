@@ -414,7 +414,7 @@ const generateQuery = (genres, lang, providers, movies_served) => {
   if (matchQuery.length === 0) {
     return finalQuery;
   } else {
-    finalQuery["$or"] = matchQuery;
+    finalQuery["$and"] = matchQuery;
   }
 
   // if (movies_served.length > 0) {
