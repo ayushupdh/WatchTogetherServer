@@ -414,12 +414,20 @@ const getUsersGroup = async (req, res) => {
       .populate({
         path: "groups",
         options: {
-          select: "name session_active _id -users",
+          select: "name session_active sessions _id -users",
           sort: { createdAt: -1 },
         },
       })
       .execPopulate();
-    return res.status(200).send({ groups: req.user.groups });
+    const { groups } = req.user.toObject();
+    groups.map((gr) => {
+      if (gr.session_active && gr.sessions.length > 0) {
+        gr.current_session = gr.sessions[gr.sessions.length - 1];
+        delete gr.sessions;
+      }
+    });
+
+    return res.status(200).send({ groups });
   } catch (error) {
     console.log(error);
     res.status(404).send(error.message);
