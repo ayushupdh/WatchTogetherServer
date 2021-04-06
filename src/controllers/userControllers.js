@@ -135,8 +135,8 @@ const signupUser = async (req, res) => {
    } 
    */
   req.body.avatar = "";
-  const user = new User(req.body);
   try {
+    const user = new User(req.body);
     await user.save();
     const token = await user.generateToken();
     res.status(201).send({ user, token });
@@ -144,9 +144,16 @@ const signupUser = async (req, res) => {
     // Catch what kind of error thrown
     if (e.errors) {
       let error = e.errors;
+      console.log(error);
       // Send error if duplicate username or email
       if (error.username) {
+        if (error.username.message.includes("timed out")) {
+          return res.status(400).send({ error: "Network Error" });
+        }
         return res.status(400).send({ error: error.username.message });
+      }
+      if (error.password) {
+        return res.status(400).send({ error: error.password.message });
       }
       if (error.email) {
         return res.status(400).send({ error: error.email.message });
@@ -178,7 +185,10 @@ or
 
     res.send({ user, token });
   } catch (error) {
-    res.status(400).send({ error: error });
+    if (error.message.includes("timed out")) {
+      return res.status(400).send({ error: "Network error" });
+    }
+    return res.status(400).send({ error: error.message });
   }
 };
 
