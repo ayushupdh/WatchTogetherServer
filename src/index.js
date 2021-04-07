@@ -1,5 +1,5 @@
 const app = require("./app");
-const socket = require("./socket/socketHandler");
+const socket = require("./socket/socket.handler");
 const port = process.env.PORT || 4000;
 
 const server = require("http").createServer(app);

@@ -1,5 +1,9 @@
 const { Server } = require("socket.io");
-const { start_session, join_session } = require("./sockethelpers");
+const {
+  start_session,
+  join_session,
+  update_params,
+} = require("./socket.helpers");
 const socketApp = (app) => {
   const io = new Server(app);
 
@@ -31,31 +35,24 @@ const socketApp = (app) => {
           providers
         );
 
-        cb({ session, error });
+        cb({ session: "session", admin: "socket._id", error: null });
 
         console.log(`[START_SESSION] Session Started`);
       }
     );
 
-    socket.on(
-      "join-session",
-      async (
-        { groupID, current_session_time, genres, lang, providers },
-        cb
-      ) => {
-        const { session, error } = await join_session(
-          sessionID,
-          socket._id,
-          genres,
-          lang,
-          providers
-        );
+    socket.on("join-session", async ({ sessionID }, cb) => {
+      const result = await join_session(sessionID, socket._id);
+      cb(result);
 
-        cb({ session, error });
+      console.log(`[JOINED_SESSION] ${socket._id} joined the session`);
+    });
+    socket.on("update-params", async ({ sessionID, params }, cb) => {
+      const result = await update_params(sessionID, params);
+      cb(result);
 
-        console.log(`[JOINED_SESSION] A user joined the session`);
-      }
-    );
+      console.log(`[UPDATES_PARAMS] ${socket._id} updated the params`);
+    });
 
     socket.on("end-session", () => {
       console.log("[END_SESSION] Session ended");
