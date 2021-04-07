@@ -273,7 +273,9 @@ const addUserToSession = async (req, res) => {
     await Session.findByIdAndUpdate(sessionID, {
       $addToSet: { active_users: userID },
     });
-    return res.sendStatus(200);
+    const session = await Session.findById(sessionID);
+    console.log(session.admin);
+    return res.send(session.admin);
   } catch (error) {
     return res.status(400).send({ error: error.message });
   }
@@ -443,24 +445,17 @@ const addToMoviesLiked = async (req, res) => {
     ) {
       throw new Error("Invalid Object id");
     }
-
     const { movies_liked } = await Session.findById(sessionID);
     const movieIDs = movies_liked.map((mov) => mov.movie);
-    console.log({ movieID });
     // check if the movies_liked array is empty or if the array has the new movieID
     if (movies_liked.length === 0 || !movieIDs.includes(movieID)) {
-      console.log({
-        check: movies_liked.length === 0 || !movieIDs.includes(movieID),
-      });
-      console.log("running");
       await Session.findByIdAndUpdate(sessionID, {
         $addToSet: {
           movies_liked: { movie: movieID, liked_by: [userID], like_count: 1 },
         },
       });
-      console.log("Ran");
 
-      return res.sendStatus(200);
+      return res.send({ like_count: 1 });
     }
     // find the index of the movieID in the  movies_liked array
     const movieIndex = movieIDs.findIndex((mov) => {
@@ -484,12 +479,44 @@ const addToMoviesLiked = async (req, res) => {
         }
       );
     }
-    return res.sendStatus(200);
+    // const resu = await Session.aggregate([
+    //   { $match: { _id: sessionID } },
+    //   { $filter: { "movies_liked.movie": { $eq: movieID } } },
+    // ]);
+    const resp = await Session.findOne({ _id: sessionID }).select({
+      movies_liked: { $elemMatch: { movie: movieID } },
+    });
+
+    return res.send({ like_count: resp.movies_liked[0].liked_by.length });
   } catch (error) {
     console.log(error);
     return res.status(400).send({ error: error.message });
   }
 };
+
+const resetSession = async (req, res) => {
+  if (process.env.NODE_ENV !== "development") {
+    return res.sendStatus(403);
+  }
+  /*
+  body:{
+    groupID:"acasc"
+  }*/
+  try {
+    const { groupID } = req.body;
+
+    await Group.findByIdAndUpdate(groupID, {
+      $set: { session_active: false, sessions: [] },
+    });
+    const group = await Group.findById(groupID);
+
+    return res.send(group);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+};
+
 const endSession = async (req, res) => {
   /*
   body:{
@@ -527,4 +554,5 @@ module.exports = {
   addToMoviesLiked,
   getSessionInfo,
   endSession,
+  resetSession,
 };

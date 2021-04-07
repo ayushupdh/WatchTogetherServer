@@ -18,6 +18,7 @@ const {
   addToMoviesLiked,
   getSessionInfo,
   endSession,
+  resetSession,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -51,6 +52,10 @@ router.get("/groups/session/movies", auth, getMoviesForSession);
 
 // Add to liked movies
 router.post("/groups/session/moviesliked", auth, addToMoviesLiked);
+
+// Reset session
+
+router.post("/groups/reset-session", auth, resetSession);
 
 // ----------------------------Session Routes Ends---------------------------------------------
 
