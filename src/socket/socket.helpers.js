@@ -294,7 +294,17 @@ const add_to_liked_movies = async (userID, sessionID, movieID) => {
 
 // const add_to_disliked_movies = async (sessionID, movieID, userID) => {};
 const leave_session = async (sessionID, userID) => {};
-const end_session = async (sessionID, userID) => {};
+const end_session = async (groupID) => {
+  try {
+    await Group.findByIdAndUpdate(groupID, {
+      $set: { session_active: false },
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 
 module.exports = {
   start_session,
@@ -302,5 +312,6 @@ module.exports = {
   getMoviesForSession,
   update_params,
   end_session,
+  leave_session,
   add_to_liked_movies,
 };

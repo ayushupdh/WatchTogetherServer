@@ -5,6 +5,8 @@ const {
   update_params,
   getMoviesForSession,
   add_to_liked_movies,
+  end_session,
+  leave_session,
 } = require("./socket.helpers");
 const socketApp = (app) => {
   const io = new Server(app);
@@ -23,7 +25,7 @@ const socketApp = (app) => {
     });
     // console.log(sessionNameSpace.adapter.rooms);
     socket.on(
-      "start-session",
+      "create-session",
       async (
         { groupID, current_session_time, genres, lang, providers },
         cb
@@ -39,10 +41,15 @@ const socketApp = (app) => {
         console.log(typeof session);
         socket.join(session.toString());
         cb({ session: session, admin: socket._id, error: error });
-        console.log(`[START_SESSION] Session Started by ${socket._id}`);
+        console.log(`[CREATE_SESSION] Session Started by ${socket._id}`);
       }
     );
-
+    socket.on("start-session", async ({ sessionID }) => {
+      setTimeout(() => {
+        socket.broadcast.to(sessionID).emit("session-started");
+      }, 200);
+      console.log("[START_SESSION] Session started by a user");
+    });
     socket.on("join-session", async ({ sessionID }, cb) => {
       console.log(typeof sessionID);
 
@@ -79,20 +86,20 @@ const socketApp = (app) => {
       );
       let roomSize = sessionNameSpace.adapter.rooms.get(sessionID).size;
       if (liked_by === roomSize) {
-        socket.to(sessionID).emit("one-movie-liked-by-all");
+        console.log("by all");
+        sessionNameSpace.to(sessionID).emit("one-movie-liked-by-all");
       }
       console.log(`[MOVIE_LIKED] ${socket._id} liked ${movieID}`);
     });
-    // socket.on("add-disliked-movies", async ({ sessionID, movieID }, cb) => {
-    //   const result = await add_to_disliked_movies(
-    //     socket._id,
-    //     sessionID,
-    //     movieID
-    //   );
-    //   cb(result);
-    //   console.log(`[MOVIE_DISLIKED] ${socket._id} liked ${movieID}`);
-    // });
-    socket.on("end-session", () => {
+    socket.on("end-session", async ({ groupID, sessionID }) => {
+      await end_session(groupID);
+      socket.broadcast.to(sessionID).emit("session-ended");
+
+      console.log("[END_SESSION] Session ended");
+    });
+    socket.on("leave-session", async ({ sessionID }) => {
+      await leave_session(sessionID);
+      socket.broadcast.to(sessionID).emit("user-left", socket._id);
       console.log("[END_SESSION] Session ended");
     });
     socket.on("disconnect", () => {
