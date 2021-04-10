@@ -38,7 +38,6 @@ const socketApp = (app) => {
           lang,
           providers
         );
-        console.log(typeof session);
         socket.join(session.toString());
         cb({ session: session, admin: socket._id, error: error });
         console.log(`[CREATE_SESSION] Session Started by ${socket._id}`);
@@ -51,16 +50,11 @@ const socketApp = (app) => {
       console.log("[START_SESSION] Session started by a user");
     });
     socket.on("join-session", async ({ sessionID }, cb) => {
-      console.log(typeof sessionID);
-
-      console.log(sessionNameSpace.adapter.rooms.get(sessionID));
       const { admin, error } = await join_session(sessionID, socket._id);
       cb({ admin, error });
 
       socket.join(sessionID);
       socket.broadcast.to(sessionID).emit("user-joined", socket._id);
-
-      console.log(sessionNameSpace.adapter.rooms.get(sessionID));
       console.log(`[JOINED_SESSION] ${socket._id} joined the session`);
     });
 
@@ -98,9 +92,18 @@ const socketApp = (app) => {
       console.log("[END_SESSION] Session ended");
     });
     socket.on("leave-session", async ({ sessionID }) => {
-      await leave_session(sessionID);
+      await leave_session(sessionID, socket._id);
       socket.broadcast.to(sessionID).emit("user-left", socket._id);
-      console.log("[END_SESSION] Session ended");
+      console.log(`[LEAVE_SESSION] ${socket._id} left ${sessionID}`);
+    });
+    socket.on("disconnecting", async () => {
+      let j = socket.rooms.values();
+      j.next();
+      const sessionID = j.next().value;
+      if (sessionID) {
+        await leave_session(sessionID, socket._id);
+        socket.broadcast.to(sessionID).emit("user-left", socket._id);
+      }
     });
     socket.on("disconnect", () => {
       console.log("[DISCONNECTED] One user has left");

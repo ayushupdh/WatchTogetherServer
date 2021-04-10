@@ -293,7 +293,24 @@ const add_to_liked_movies = async (userID, sessionID, movieID) => {
 };
 
 // const add_to_disliked_movies = async (sessionID, movieID, userID) => {};
-const leave_session = async (sessionID, userID) => {};
+const leave_session = async (sessionID, userID) => {
+  try {
+    // check for validity
+    if (!userID || !sessionID) {
+      throw new Error("userID and sessionID is required");
+    }
+    if (!isValidObjectId(userID) || !isValidObjectId(sessionID)) {
+      throw new Error("Invalid Object id");
+    }
+    await Session.findByIdAndUpdate(sessionID, {
+      $pull: { active_users: userID },
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 const end_session = async (groupID) => {
   try {
     await Group.findByIdAndUpdate(groupID, {
