@@ -19,6 +19,7 @@ const {
   getSessionInfo,
   endSession,
   resetSession,
+  getResultsforSession,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -49,6 +50,9 @@ router.post("/groups/session/removeusers", auth, removeUserFromSession);
 
 //Get movies for this session
 router.get("/groups/session/movies", auth, getMoviesForSession);
+
+//Get results for this session
+router.get("/groups/session/results", auth, getResultsforSession);
 
 // Add to liked movies
 router.post("/groups/session/moviesliked", auth, addToMoviesLiked);

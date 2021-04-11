@@ -40,6 +40,7 @@ const socketApp = (app) => {
         );
         socket.join(session.toString());
         cb({ session: session, admin: socket._id, error: error });
+        socket.broadcast.emit("group-status-changed", groupID);
         console.log(`[CREATE_SESSION] Session Started by ${socket._id}`);
       }
     );
@@ -88,7 +89,7 @@ const socketApp = (app) => {
     socket.on("end-session", async ({ groupID, sessionID }) => {
       await end_session(groupID);
       socket.broadcast.to(sessionID).emit("session-ended");
-
+      socket.broadcast.emit("group-status-changed", groupID);
       console.log("[END_SESSION] Session ended");
     });
     socket.on("leave-session", async ({ sessionID }) => {

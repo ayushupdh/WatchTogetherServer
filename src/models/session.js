@@ -61,6 +61,10 @@ const sessionSchema = new Schema(
       type: Number,
       required: true,
     },
+    swiping_active: {
+      type: Boolean,
+      default: false,
+    },
     admin: {
       type: Schema.Types.ObjectId,
       ref: "User",

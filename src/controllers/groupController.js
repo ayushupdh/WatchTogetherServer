@@ -223,12 +223,11 @@ const createSession = async (req, res) => {
       params: { genre: genres, platform, lang },
     });
     session.save();
-    res.send({ session });
+    console.log(session);
     await Group.findByIdAndUpdate(groupID, {
       session_active: true,
       $addToSet: { sessions: session._id },
     });
-
     return;
   } catch (error) {
     return res.status(400).send({ error: error.message });
@@ -306,6 +305,42 @@ const removeUserFromSession = async (req, res) => {
     return res.status(400).send({ error: error.message });
   }
 };
+
+const getResultsforSession = async (req, res) => {
+  /*
+  params:{
+    sessionID:"acasc"
+  }*/
+  try {
+    const { sessionID } = req.query;
+    if (!sessionID) {
+      throw new Error(" sessionID is required");
+    }
+    if (!isValidObjectId(sessionID)) {
+      throw new Error("Invalid sessionID");
+    }
+
+    let results = await Session.findById(sessionID)
+      .select("movies_liked active_users -_id")
+      .populate({
+        path: "active_users movies_liked.liked_by movies_liked.movie",
+        select: "name avatar overview title poster_path",
+      });
+    results = results.toObject();
+    if (results && results.movies_liked && results.movies_liked.length > 1) {
+      results.movies_liked.sort((firstMovie, secondMovie) => {
+        return secondMovie.like_count - firstMovie.like_count;
+      });
+      if (results.movies_liked.length > 5) {
+        results.movies_liked = results.movies_liked.slice(0, 5);
+      }
+    }
+    return res.send(results);
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
+
 const getMoviesForSession = async (req, res) => {
   try {
     // Validate params and if session exists
@@ -555,4 +590,5 @@ module.exports = {
   getSessionInfo,
   endSession,
   resetSession,
+  getResultsforSession,
 };
