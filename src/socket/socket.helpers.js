@@ -291,7 +291,24 @@ const add_to_liked_movies = async (userID, sessionID, movieID) => {
     return { liked_by: null };
   }
 };
-
+const makeSwipingActive = async (sessionID) => {
+  try {
+    // check for validity
+    if (!sessionID) {
+      throw new Error(" sessionID is required");
+    }
+    if (!isValidObjectId(sessionID)) {
+      throw new Error("Invalid sessionID");
+    }
+    await Session.findByIdAndUpdate(sessionID, {
+      $set: { swiping_active: true },
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 // const add_to_disliked_movies = async (sessionID, movieID, userID) => {};
 const leave_session = async (sessionID, userID) => {
   try {
@@ -331,4 +348,5 @@ module.exports = {
   end_session,
   leave_session,
   add_to_liked_movies,
+  makeSwipingActive,
 };

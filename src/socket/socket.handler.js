@@ -7,6 +7,7 @@ const {
   add_to_liked_movies,
   end_session,
   leave_session,
+  makeSwipingActive,
 } = require("./socket.helpers");
 const socketApp = (app) => {
   const io = new Server(app);
@@ -45,6 +46,7 @@ const socketApp = (app) => {
       }
     );
     socket.on("start-session", async ({ sessionID }) => {
+      await makeSwipingActive(sessionID);
       setTimeout(() => {
         socket.broadcast.to(sessionID).emit("session-started");
       }, 200);
