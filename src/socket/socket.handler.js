@@ -45,6 +45,13 @@ const socketApp = (app) => {
         console.log(`[CREATE_SESSION] Session Started by ${socket._id}`);
       }
     );
+    socket.on("friend-added-to-group", (sessionID) => {
+      socket.broadcast.to(sessionID).emit("update-friendList");
+    });
+    socket.on("friend-removed-from-group", (sessionID) => {
+      socket.broadcast.to(sessionID).emit("update-friendList");
+    });
+
     socket.on("start-session", async ({ sessionID }) => {
       await makeSwipingActive(sessionID);
       setTimeout(() => {
