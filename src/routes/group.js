@@ -3,6 +3,7 @@ const router = new express.Router();
 const auth = require("../middleware/auth");
 const {
   getAllGroups,
+  renameGroup,
   createGroup,
   dumpAllGroups,
   getGroupInfo,
@@ -69,6 +70,9 @@ router.post("/groups/reset-session", auth, resetSession);
 
 // Create a group
 router.post("/groups/create", auth, createGroup);
+
+// Create a group
+router.post("/groups/rename", auth, renameGroup);
 
 // Get groups info
 router.get("/groups/:id", auth, getGroupInfo);

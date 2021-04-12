@@ -189,8 +189,11 @@ const getGroupsSession = async (req, res) => {
     const ss = await Group.findById(id).select(" sessions -_id");
     const { sessions } = await ss
       .populate({
-        path: "sessions sessions.active_users",
-        select: "createdAt",
+        path: "sessions",
+        options: {
+          select: "createdAt",
+          sort: { createdAt: -1 },
+        },
       })
       .execPopulate();
 
@@ -595,6 +598,26 @@ const endSession = async (req, res) => {
     return res.sendStatus(400);
   }
 };
+
+const renameGroup = async (req, res) => {
+  /*
+  body:{
+    groupID:"acasc",
+    name:"newName"
+  }*/
+  try {
+    const { groupID, name } = req.body;
+
+    await Group.findByIdAndUpdate(groupID, {
+      $set: { name: name },
+    });
+
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+};
 // ----------------------------Session Controllers end---------------------------------------------
 
 module.exports = {
@@ -617,4 +640,5 @@ module.exports = {
   resetSession,
   getResultsforSession,
   getGroupsSession,
+  renameGroup,
 };
