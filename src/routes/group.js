@@ -20,6 +20,7 @@ const {
   endSession,
   resetSession,
   getResultsforSession,
+  getGroupsSession,
 } = require("../controllers/groupController");
 
 // Get all groups
@@ -35,6 +36,9 @@ router.post("/groups/session", auth, createSession);
 
 // End a  new Session
 router.post("/groups/session/end", auth, endSession);
+
+// Get groups session
+router.get("/groups/:id/session", auth, getGroupsSession);
 
 // Get session info
 router.get("/groups/session", auth, getSessionInfo);

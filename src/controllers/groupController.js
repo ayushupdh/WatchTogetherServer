@@ -24,9 +24,11 @@ const getAllGroups = async (req, res) => {
 
 const getGroupInfo = async (req, res) => {
   try {
-    const groups = await Group.findOne({ _id: req.params.id });
+    const groups = await Group.findOne({ _id: req.params.id }).select(
+      "-sessions"
+    );
     await groups
-      .populate("users created_by", "name username created_by avatar")
+      .populate("users created_by ", "name  created_by avatar")
       .execPopulate();
 
     res.status(200).send(groups);
@@ -174,6 +176,29 @@ const getSessionInfo = async (req, res) => {
 };
 
 // ----------------------------Session Controllers---------------------------------------------
+const getGroupsSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      throw new Error("GroupID is required");
+    }
+    if (!isValidObjectId(id)) {
+      throw new Error("Invalid Object id");
+    }
+
+    const ss = await Group.findById(id).select(" sessions -_id");
+    const { sessions } = await ss
+      .populate({
+        path: "sessions sessions.active_users",
+        select: "createdAt",
+      })
+      .execPopulate();
+
+    return res.send(sessions);
+  } catch (error) {
+    return res.status(400).send({ error: error.message });
+  }
+};
 const createSession = async (req, res) => {
   /*
   body:{
@@ -591,4 +616,5 @@ module.exports = {
   endSession,
   resetSession,
   getResultsforSession,
+  getGroupsSession,
 };
