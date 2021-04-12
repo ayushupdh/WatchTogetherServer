@@ -140,9 +140,14 @@ const getMoviesForSession = async (sessionID, currentIndex) => {
     let movies = [];
     // Get the movielist length from the session
     let movie_served_len = movies_served.length;
-
+    console.log({ currentIndex, qty, movie_served_len });
     // if the movie list is smaller than the currentIndex and qty required amount, fetch movies from movie document
-    if (currentIndex + qty > movie_served_len) {
+    // THIS CASE SCNEARIO:{ currentIndex: 0, qty: 20, movie_served_len: 14 }
+    if (
+      currentIndex + qty > movie_served_len &&
+      !(currentIndex === 0 && movie_served_len !== 0)
+    ) {
+      console.log(!(currentIndex === 0 && movie_served_len !== 0));
       movies = await getNMovies(qty, params, movies_served);
       // store the movies obtained in the sessions doc
       const _ids = movies.map((movie) => movie._id);
@@ -221,7 +226,7 @@ const generateQuery = (genres, lang, providers, movies_served) => {
   const finalQuery = {};
 
   if (movies_served.length > 0) {
-    matchQuery.push({ _id: { $ne: movies_served } });
+    matchQuery.push({ _id: { $nin: movies_served } });
   }
   if (matchQuery.length === 0) {
     return finalQuery;
