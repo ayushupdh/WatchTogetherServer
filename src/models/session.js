@@ -61,6 +61,9 @@ const sessionSchema = new Schema(
       type: Number,
       required: true,
     },
+    started_time: {
+      type: Number,
+    },
     swiping_active: {
       type: Boolean,
       default: false,
