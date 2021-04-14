@@ -52,11 +52,12 @@ const socketApp = (app) => {
       socket.broadcast.to(sessionID).emit("update-friendList");
     });
 
-    socket.on("start-session", async ({ sessionID }) => {
-      await makeSwipingActive(sessionID);
+    socket.on("start-session", async ({ sessionID }, cb) => {
+      const time = await makeSwipingActive(sessionID);
       setTimeout(() => {
-        socket.broadcast.to(sessionID).emit("session-started");
+        socket.broadcast.to(sessionID).emit("session-started", time);
       }, 200);
+      cb(time);
       console.log("[START_SESSION] Session started by a user");
     });
     socket.on("join-session", async ({ sessionID }, cb) => {
@@ -71,6 +72,7 @@ const socketApp = (app) => {
     socket.on("update-params", async ({ sessionID, params }, cb) => {
       const result = await update_params(sessionID, params);
       cb(result);
+      socket.broadcast.to(sessionID).emit("time-updated", params.time);
       console.log(`[UPDATES_PARAMS] ${socket._id} updated the params`);
     });
 

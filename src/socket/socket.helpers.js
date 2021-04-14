@@ -55,6 +55,7 @@ const start_session = async (
 
     return { session: session._id, error };
   } catch (e) {
+    console.log(e);
     return { session, error: e.message };
   }
 };
@@ -101,11 +102,13 @@ const update_params = async (sessionID, params) => {
     if (!sessionID || !params) {
       throw new Error("sessionId and params is required");
     }
+    console.log(params);
     if (!isValidObjectId(sessionID)) {
       throw new Error("Invalid Object id");
     }
     console.log(sessionID);
     await Session.findByIdAndUpdate(sessionID, {
+      $set: params.time ? { time: params.time } : null,
       $addToSet: {
         "params.genre": params.genre || [],
         "params.lang": params.lang || [],
@@ -303,13 +306,14 @@ const makeSwipingActive = async (sessionID) => {
     if (!isValidObjectId(sessionID)) {
       throw new Error("Invalid sessionID");
     }
+    let currTime = Date.now();
     await Session.findByIdAndUpdate(sessionID, {
-      $set: { swiping_active: true },
+      $set: { swiping_active: true, started_time: currTime },
     });
-    return true;
+    return currTime;
   } catch (error) {
     console.log(error);
-    return false;
+    return 0;
   }
 };
 // const add_to_disliked_movies = async (sessionID, movieID, userID) => {};
