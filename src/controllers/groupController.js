@@ -163,9 +163,6 @@ const removeGroupHelper = async (groupID) => {
 };
 const getSessionInfo = async (req, res) => {
   try {
-    if (process.env.NODE_ENV !== "development") {
-      return res.sendStatus(403);
-    }
     const { sessionID } = req.query;
     const sessions = await Session.findById(sessionID);
     res.status(200).send(sessions);
