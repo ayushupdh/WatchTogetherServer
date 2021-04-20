@@ -9,9 +9,6 @@ const {
   userTwoId,
 } = require("./db");
 beforeEach(setupDatabase);
-
-// afterAll(() => mongoose.disconnect());
-
 describe("Testing Authentication routes", () => {
   it("Signup a user", async () => {
     const response = await request(app)
@@ -211,8 +208,8 @@ describe("Testing User Friends routes", () => {
     await request(app)
       .delete("/users/me/friend")
       .set("Authorization", `Bearer ${userTwo.tokens[0].token}`)
-      .send({
-        friend: userOne.username,
+      .query({
+        id: userOne._id.toString(),
       })
       .expect(200);
   });
@@ -220,8 +217,8 @@ describe("Testing User Friends routes", () => {
   it("Should not delete friend without authorization", async () => {
     await request(app)
       .delete("/users/me/friend")
-      .send({
-        friend: userOne.username,
+      .query({
+        id: userOne._id.toString(),
       })
       .expect(401);
   });
@@ -238,7 +235,7 @@ describe("Testing User Friends routes", () => {
   });
 });
 
-describe("Testing User Friends routes", () => {
+describe("Testing User Accounts", () => {
   it("Don't delete account for unauthorised user", async () => {
     await request(app).delete("/users/me").send().expect(401);
   });

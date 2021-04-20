@@ -20,7 +20,7 @@ const socketApp = (app) => {
     console.log(
       `[CONNECTION] A new User connected Users: ${sessionNameSpace.sockets.size}`
     );
-    socket.once("set-id", ({ _id }) => {
+    socket.on("set-id", ({ _id }) => {
       socket._id = _id;
       console.log(`[SETTING_ID] ID SET`);
     });
