@@ -495,7 +495,7 @@ const getMoviesforUser = async (req, res) => {
     ];
     // console.log(movies);
     const query = generateQuery(
-      params.genre,
+      params.genres,
       params.lang,
       params.providers,
       movies_present
