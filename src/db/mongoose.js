@@ -7,7 +7,7 @@ mongoose.connect(process.env.MONGOURL, {
   useFindAndModify: false,
 });
 const db = mongoose.connection;
-
+module.exports = db;
 // db.on('error', console.error.bind(console, 'connection error:'));
 // db.once('open', ()=> {
 //     console.log('Connected to DB');

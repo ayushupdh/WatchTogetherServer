@@ -35,7 +35,6 @@ const moviesSchema = new Schema(
     },
     status: {
       type: String,
-      required: true,
     },
     revenue: {
       type: Number,
