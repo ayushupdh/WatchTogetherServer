@@ -39,6 +39,7 @@ const groupSchema = new Schema(
   }
 );
 
+// To use virtual fields
 groupSchema.set("toObject", { virtuals: true });
 groupSchema.set("toJSON", { virtuals: true });
 const Group = mongoose.model("Group", groupSchema);

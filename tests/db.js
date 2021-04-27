@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const User = require("../src/models/user");
 
+// Instantiate two users for testing
 const userOneId = new mongoose.Types.ObjectId();
 const userOne = {
   _id: userOneId,
@@ -34,6 +35,7 @@ const userTwo = {
   ],
 };
 
+// Instantiate two users for testing
 const setupDatabase = async () => {
   await User.deleteMany();
   await new User(userOne).save();

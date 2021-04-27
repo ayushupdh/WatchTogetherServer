@@ -116,6 +116,7 @@ const moviesSchema = new Schema(
   { toJson: { virtuals: true }, toObject: { virtuals: true }, id: false }
 );
 
+// To use virtual fields
 moviesSchema.set("toObject", { virtuals: true });
 moviesSchema.set("toJSON", { virtuals: true });
 const Movie = mongoose.model("Movie", moviesSchema);

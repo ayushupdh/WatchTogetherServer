@@ -67,6 +67,7 @@ const getNRandomMovies = async (req, res) => {
   }
 };
 
+// Generate Query with given params for mongodb pipeline
 const generateQuery = (genres, lang, providers) => {
   let matchQuery = [];
 

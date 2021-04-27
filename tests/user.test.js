@@ -8,7 +8,10 @@ const {
   userTwo,
   userTwoId,
 } = require("./db");
+
+// Run this before each test
 beforeEach(setupDatabase);
+
 describe("Testing Authentication routes", () => {
   it("Signup a user", async () => {
     const response = await request(app)

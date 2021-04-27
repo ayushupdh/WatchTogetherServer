@@ -32,10 +32,10 @@ const {
 // TO do
 // Find out a way to remove pre hooks from user
 
-// Get all users
+// Get all users --only for dev
 router.get("/users/getAll", getAllUsers);
 
-// Dump all users
+// Dump all users --only for dev
 router.delete("/users/dumpAll", deleteAllUsers);
 
 // Search Users

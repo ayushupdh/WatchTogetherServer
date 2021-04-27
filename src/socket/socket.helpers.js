@@ -5,6 +5,7 @@ const Movie = require("../models/movies");
 
 const Session = require("../models/session");
 
+// Function to create a new session
 const start_session = async (
   groupID,
   userID,
@@ -60,6 +61,7 @@ const start_session = async (
   }
 };
 
+// Function to add a user to a session
 const join_session = async (sessionID, userID) => {
   /*
   body:{
@@ -88,6 +90,8 @@ const join_session = async (sessionID, userID) => {
     return { admin: null, error: error.message };
   }
 };
+
+// Function to update params for a session
 const update_params = async (sessionID, params) => {
   /*
   body:{
@@ -121,6 +125,8 @@ const update_params = async (sessionID, params) => {
     return false;
   }
 };
+
+// Function to get movies for a session
 const getMoviesForSession = async (sessionID, currentIndex) => {
   try {
     let qty = 20;
@@ -176,6 +182,7 @@ const getMoviesForSession = async (sessionID, currentIndex) => {
   }
 };
 
+// Helper Function to get N movies from the mongoDB
 const getNMovies = async (qty, params, movies_served) => {
   try {
     const query = generateQuery(
@@ -203,6 +210,7 @@ const getNMovies = async (qty, params, movies_served) => {
   }
 };
 
+// Helper Function to generate query for MONGODB
 const generateQuery = (genres, lang, providers, movies_served) => {
   let matchQuery = [];
 
@@ -241,6 +249,7 @@ const generateQuery = (genres, lang, providers, movies_served) => {
   return finalQuery;
 };
 
+// Function to add to liked movies by a user
 const add_to_liked_movies = async (userID, sessionID, movieID) => {
   try {
     // check for validity
@@ -297,6 +306,8 @@ const add_to_liked_movies = async (userID, sessionID, movieID) => {
     return { liked_by: null };
   }
 };
+
+// Function to make swiping active in a session
 const makeSwipingActive = async (sessionID) => {
   try {
     // check for validity
@@ -316,7 +327,10 @@ const makeSwipingActive = async (sessionID) => {
     return 0;
   }
 };
+
 // const add_to_disliked_movies = async (sessionID, movieID, userID) => {};
+
+// Function to remove a user from a session
 const leave_session = async (sessionID, userID) => {
   try {
     // check for validity
@@ -335,6 +349,8 @@ const leave_session = async (sessionID, userID) => {
     return false;
   }
 };
+
+// Function to end a session
 const end_session = async (groupID) => {
   try {
     await Group.findByIdAndUpdate(groupID, {

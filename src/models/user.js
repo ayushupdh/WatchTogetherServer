@@ -83,6 +83,7 @@ const userSchema = new Schema(
   }
 );
 
+// To use virtual fields(GROUPS)
 userSchema.virtual("groups", {
   ref: "Group",
   //   Field on this document
@@ -91,7 +92,7 @@ userSchema.virtual("groups", {
   foreignField: "users",
 });
 
-//preprocessing before this method
+//check for password update before save
 userSchema.pre("save", async function (next) {
   const user = this;
 
@@ -109,7 +110,6 @@ userSchema.path("email").validate(async (email) => {
 }, "Email already exists");
 
 // Check for unique username
-
 userSchema.path("username").validate(async (username) => {
   const usernameCount = await User.countDocuments({ username });
   return !usernameCount;
@@ -130,6 +130,7 @@ userSchema.methods.generateToken = async function () {
   return token;
 };
 
+// When returning the schema as json
 userSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject();
@@ -139,6 +140,7 @@ userSchema.methods.toJSON = function () {
 };
 
 //not object dependent. Use on the class
+// Search for user using username/email and password
 userSchema.statics.findByCredentials = async (usernameOrEmail, password) => {
   let user = await User.findOne(
     { email: usernameOrEmail },

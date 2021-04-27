@@ -4,7 +4,103 @@ const upload = require("../services/multerUpload");
 const deleteFileFromS3 = require("../services/deleteFile");
 const singleUpload = upload.single("avatar");
 const { runBG_RemoveOldDislikedMovies } = require("../services/background");
-// TODO Add user avatar on add friends
+
+// ----Auth handlers start----
+const signupUser = async (req, res) => {
+  /*body should look like
+   {
+       "name":"Name",
+       "username":"username",
+       "email":"username@example.com",
+       "password":"password123"
+   } 
+   */
+  req.body.avatar = "";
+  try {
+    const user = new User(req.body);
+    await user.save();
+    const token = await user.generateToken();
+    res.status(201).send({ user, token });
+  } catch (e) {
+    // Catch what kind of error thrown
+    if (e.errors) {
+      let error = e.errors;
+      console.log(error);
+      // Send error if duplicate username or email
+      if (error.username) {
+        if (error.username.message.includes("timed out")) {
+          return res.status(400).send({ error: "Network Error" });
+        }
+        return res.status(400).send({ error: error.username.message });
+      }
+      if (error.password) {
+        return res.status(400).send({ error: error.password.message });
+      }
+      if (error.email) {
+        return res.status(400).send({ error: error.email.message });
+      }
+    }
+    return res.status(400).send({ error: "Error signing up" });
+  }
+};
+
+const loginUser = async (req, res) => {
+  /*body should look like
+{
+    "username":"username",
+    "password":"password123"
+}
+or
+    {
+    "username":"email@example.com",
+    "password":"password123"
+}
+*/
+  try {
+    const user = await User.findByCredentials(
+      req.body.username,
+      req.body.password
+    );
+
+    const token = await user.generateToken();
+
+    res.send({ user, token });
+  } catch (error) {
+    if (error.message.includes("timed out")) {
+      return res.status(400).send({ error: "Network error" });
+    }
+    return res.status(400).send({ error: error.message });
+  }
+};
+
+const logoutUser = async (req, res) => {
+  try {
+    // req.user.tokens = req.user.tokens.filter((token) => {
+    //   return token.token !== req.token;
+    // });
+    // await req.user.save();
+    await User.updateOne(
+      { _id: req.user._id },
+      { tokens: req.user.tokens.filter((token) => token.token !== req.token) }
+    );
+    return res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(404);
+  }
+};
+
+const logoutUserEveryWhere = async (req, res) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { tokens: [] });
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(404);
+  }
+};
+// ----Auth handlers end----
+
 const getAllUsers = async (req, res) => {
   try {
     if (process.env.NODE_ENV !== "development") {
@@ -125,99 +221,7 @@ const searchUsersFriend = async (req, res) => {
     res.sendStatus(400);
   }
 };
-const signupUser = async (req, res) => {
-  /*body should look like
-   {
-       "name":"Name",
-       "username":"username",
-       "email":"username@example.com",
-       "password":"password123"
-   } 
-   */
-  req.body.avatar = "";
-  try {
-    const user = new User(req.body);
-    await user.save();
-    const token = await user.generateToken();
-    res.status(201).send({ user, token });
-  } catch (e) {
-    // Catch what kind of error thrown
-    if (e.errors) {
-      let error = e.errors;
-      console.log(error);
-      // Send error if duplicate username or email
-      if (error.username) {
-        if (error.username.message.includes("timed out")) {
-          return res.status(400).send({ error: "Network Error" });
-        }
-        return res.status(400).send({ error: error.username.message });
-      }
-      if (error.password) {
-        return res.status(400).send({ error: error.password.message });
-      }
-      if (error.email) {
-        return res.status(400).send({ error: error.email.message });
-      }
-    }
-    return res.status(400).send({ error: "Error signing up" });
-  }
-};
 
-const loginUser = async (req, res) => {
-  /*body should look like
-{
-    "username":"username",
-    "password":"password123"
-}
-or
-    {
-    "username":"email@example.com",
-    "password":"password123"
-}
-*/
-  try {
-    const user = await User.findByCredentials(
-      req.body.username,
-      req.body.password
-    );
-
-    const token = await user.generateToken();
-
-    res.send({ user, token });
-  } catch (error) {
-    if (error.message.includes("timed out")) {
-      return res.status(400).send({ error: "Network error" });
-    }
-    return res.status(400).send({ error: error.message });
-  }
-};
-
-const logoutUser = async (req, res) => {
-  try {
-    // req.user.tokens = req.user.tokens.filter((token) => {
-    //   return token.token !== req.token;
-    // });
-    // await req.user.save();
-    await User.updateOne(
-      { _id: req.user._id },
-      { tokens: req.user.tokens.filter((token) => token.token !== req.token) }
-    );
-    return res.sendStatus(200);
-  } catch (error) {
-    console.log(error);
-    return res.sendStatus(404);
-  }
-};
-
-const logoutUserEveryWhere = async (req, res) => {
-  try {
-    await User.updateOne({ _id: req.user._id }, { tokens: [] });
-    res.sendStatus(200);
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(404);
-  }
-};
 const getUsersAccount = async (req, res) => {
   try {
     const userObj = req.user.toObject();
@@ -417,7 +421,6 @@ const changeUsersStatus = async (req, res) => {
   }
 };
 
-// !Not tested ---GROUP
 const getUsersGroup = async (req, res) => {
   try {
     await req.user
@@ -508,7 +511,7 @@ const getMoviesforUser = async (req, res) => {
     res.sendStatus(500);
   }
 };
-
+// Get movies based on the query
 const getNMovies = async (qty, query) => {
   try {
     const movies = await Movie.aggregate([
@@ -529,7 +532,7 @@ const getNMovies = async (qty, query) => {
     console.log(error);
   }
 };
-
+// generate query for the mongodb pipeline
 const generateQuery = (genres, lang, providers, movies_present) => {
   let matchQuery = [];
 

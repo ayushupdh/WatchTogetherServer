@@ -24,10 +24,10 @@ const {
   getGroupsSession,
 } = require("../controllers/groupController");
 
-// Get all groups
+// Get all groups -- only for dev
 router.get("/groups/getAll", auth, getAllGroups);
 
-// Delete all groups
+// Delete all groups -- only for dev
 router.delete("/groups/dumpAll", auth, dumpAllGroups);
 
 // ----------------------------Session Routes---------------------------------------------
@@ -68,6 +68,8 @@ router.post("/groups/reset-session", auth, resetSession);
 
 // ----------------------------Session Routes Ends---------------------------------------------
 
+// ----------------------------Group Routes Starts---------------------------------------------
+
 // Create a group
 router.post("/groups/create", auth, createGroup);
 
@@ -88,5 +90,7 @@ router.delete("/groups/:groupId/users/:userId", auth, removeUserFromGroup);
 
 // !Delete group  Needs to be updated
 router.delete("/groups/:id", auth, deleteGroup);
+
+// ----------------------------Group Routes Ends---------------------------------------------
 
 module.exports = router;

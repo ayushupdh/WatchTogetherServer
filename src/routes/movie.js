@@ -7,7 +7,7 @@ const {
   getMovieInfo,
 } = require("../controllers/movieController");
 
-// Get all groups
+// Get all groups --only for dev
 router.get("/movies/getAll", getAllMovies);
 
 // Delete all groups

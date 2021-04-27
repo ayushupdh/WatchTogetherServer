@@ -82,6 +82,7 @@ const sessionSchema = new Schema(
   }
 );
 
+// To use virtual fields
 sessionSchema.set("toObject", { virtuals: true });
 sessionSchema.set("toJSON", { virtuals: true });
 const Session = mongoose.model("Session", sessionSchema);

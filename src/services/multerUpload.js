@@ -1,6 +1,8 @@
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const s3 = require("./aws");
+
+// Filters for images
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/jpeg" ||
@@ -13,6 +15,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Upload the file to S3 using multer
 const upload = multer({
   fileFilter,
   limits: { fileSize: 1024 * 1024 },

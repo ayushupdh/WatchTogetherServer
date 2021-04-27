@@ -4,9 +4,12 @@ const Session = require("../models/session");
 const User = require("../models/user");
 const Movie = require("../models/movies");
 
+// Buggy- Do not use
 const createMovieObject = (id) => {
   return { movie: "605da28ddc4fc974181cd682", liked_by: [], like_count: 0 };
 };
+// ----------------------------GROUPS Controllers start---------------------------------------------
+
 // !Turn Session active false at some point
 const getAllGroups = async (req, res) => {
   try {
@@ -171,6 +174,7 @@ const getSessionInfo = async (req, res) => {
     res.status(400).send(e);
   }
 };
+// ----------------------------GROUPS Controllers end---------------------------------------------
 
 // ----------------------------Session Controllers---------------------------------------------
 const getGroupsSession = async (req, res) => {
